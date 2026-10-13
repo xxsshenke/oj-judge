@@ -1,0 +1,11 @@
+# build output (regenerated, do not commit)
+target/
+*.class
+
+# IDE local config (contains machine-specific absolute paths)
+.idea/
+*.iml
+
+# OS files
+Thumbs.db
+.DS_Store
