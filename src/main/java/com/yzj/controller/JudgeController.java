@@ -1,27 +1,25 @@
 package com.yzj.controller;
 
-import com.yzj.pojo.JudgeResult;
+import com.yzj.pojo.Result;
 import com.yzj.pojo.SubmitRequest;
-import com.yzj.service.JudgeService;
-import org.springframework.beans.factory.annotation.Autowired;
+
+import com.yzj.service.SubmissionService;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.io.IOException;
-
 
 @RestController
 public class JudgeController {
-    private final JudgeService judgeService;
 
-    public JudgeController(JudgeService judgeService) {
-        this.judgeService = judgeService;
+    private final SubmissionService submissionService;
+
+    public JudgeController(SubmissionService submissionService) {
+        this.submissionService = submissionService;
     }
-    @PostMapping("/submit")
-    public JudgeResult submitController(
-            @RequestBody SubmitRequest req) throws IOException, InterruptedException {
-        return judgeService.judge(req.code(), req.expected());
+    @PostMapping("/submissions")
+    public Result submit(@RequestBody SubmitRequest req) {
+        return Result.success(submissionService.submit(req));
     }
 
 }

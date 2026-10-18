@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yzj.mapper.ProblemMapper">
+
+    <select id="findAll" resultType="com.yzj.pojo.Problem">
+        select id, title, description, difficulty, create_time, update_time
+        from problem
+        order by id
+    </select>
+
+    <select id="findById" resultType="com.yzj.pojo.Problem">
+        select id, title, description, expected, difficulty, create_time, update_time
+        from problem
+        where id = #{id}
+    </select>
+
+    <select id="findDetailById" resultType="com.yzj.pojo.Problem">
+        select id, title, description, difficulty, create_time, update_time
+        from problem
+        where id = #{id}
+    </select>
+</mapper>

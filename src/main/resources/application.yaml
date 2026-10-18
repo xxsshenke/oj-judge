@@ -1,3 +1,16 @@
 spring:
   application:
     name: oj-judge
+  datasource:
+    url: jdbc:mysql://localhost:3306/oj_judge
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: root
+    password: 123456
+
+mybatis:
+  configuration:
+    # 数据库下划线字段 → Java 驼峰属性（problem_id → problemId）
+    map-underscore-to-camel-case: true
+    # 把执行的 SQL 打到控制台，调试用
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+

@@ -1,4 +1,4 @@
 package com.yzj.pojo;
 
-public record SubmitRequest(String code, String expected) {
+public record SubmitRequest(String code, Integer problemId) {
 }

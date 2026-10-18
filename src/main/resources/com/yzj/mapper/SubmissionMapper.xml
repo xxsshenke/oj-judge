@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yzj.mapper.SubmissionMapper">
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into submission(problem_id, code, language, verdict, message, time_cost, create_time)
+        values (#{problemId}, #{code}, #{language}, #{verdict}, #{message}, #{timeCost}, #{createTime})
+    </insert>
+
+    <select id="findById" resultType="com.yzj.pojo.Submission">
+        select * from submission where id = #{id}
+    </select>
+
+    <select id="findByProblemId" resultType="com.yzj.pojo.Submission">
+        select * from submission
+        where problem_id = #{problemId}
+        order by create_time desc
+    </select>
+
+</mapper>
