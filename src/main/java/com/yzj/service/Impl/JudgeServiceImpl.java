@@ -20,9 +20,10 @@ public class JudgeServiceImpl implements JudgeService {
     private static final String OUTPUT_FILE = "out.txt";
     private static final long TIME_LIMIT_SECONDS = 2;
 
+    @Override
     public JudgeResult judge(String code, String expected) {
         if (code == null || code.isBlank()) {
-            return new JudgeResult("CE", "代码不能为空");
+            return new JudgeResult("CE", "代码不能为空",0);
         }
         try {
             return doJudge(code, expected);
@@ -61,8 +62,9 @@ public class JudgeServiceImpl implements JudgeService {
         }
         int exitCode = ps.waitFor();
         if (exitCode != 0) {
-            return new JudgeResult("CE", output.toString());
+                return new JudgeResult("CE", output.toString(),0);
         } else {
+            long start = System.currentTimeMillis();
             ProcessBuilder run = new ProcessBuilder("java",
                     "-Duser.language=en",
                     "-Duser.country=US",
@@ -74,19 +76,21 @@ public class JudgeServiceImpl implements JudgeService {
             // 现在没人读流了，主线程可以安全地在这里等
             if (!runStart.waitFor(TIME_LIMIT_SECONDS, TimeUnit.SECONDS)) {
                 runStart.destroyForcibly();                        // ← 超时，杀！
-                return new JudgeResult("TLE", null);
+                long cost = System.currentTimeMillis() - start;
+                return new JudgeResult("TLE", null, cost);
             }
+            long cost = System.currentTimeMillis() - start;
             String runOutput = Files.readString(workDir.resolve(OUTPUT_FILE));
             int runExitCode = runStart.exitValue();   // 进程已结束，直接读退出码
             if (runExitCode != 0) {
-                return new JudgeResult("RE", runOutput);
+                return new JudgeResult("RE", runOutput, cost);
             } else {// 标准答案
                 String actual = runOutput.trim();              // 用户程序输出
                 if (actual.equals(expected)) {
-                    return new JudgeResult("AC", null);
+                    return new JudgeResult("AC", null, cost);
                 } else {
                     String out = "actual : " + actual + "\n" + "expected : " + expected;
-                    return new JudgeResult("WA", out);
+                    return new JudgeResult("WA", out, cost);
                 }
             }
         }

@@ -12,6 +12,7 @@ import com.yzj.service.SubmissionService;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class SubmissionServiceImpl implements SubmissionService {
@@ -28,6 +29,7 @@ public class SubmissionServiceImpl implements SubmissionService {
         this.submissionMapper = submissionMapper;
     }
 
+    @Override
     public Submission submit(SubmitRequest req) {
 
         //参数校验
@@ -42,9 +44,7 @@ public class SubmissionServiceImpl implements SubmissionService {
         }
 
         // 判题
-        long start = System.currentTimeMillis();
         JudgeResult judgeResult = judgeService.judge(req.code(), problem.getExpected());
-        int cost = (int) (System.currentTimeMillis() - start);
 
         Submission submission = new Submission();
         submission.setProblemId(req.problemId());
@@ -52,11 +52,24 @@ public class SubmissionServiceImpl implements SubmissionService {
         submission.setLanguage("java");
         submission.setVerdict(judgeResult.verdict());
         submission.setMessage(judgeResult.message());
-        submission.setTimeCost(cost);
+        submission.setTimeCost((int)judgeResult.timeCostMs());
         submission.setCreateTime(LocalDateTime.now());
         submissionMapper.insert(submission);
 
         return submission;
     }
 
+    @Override
+    public Submission detail(Integer id) {
+        Submission submission = submissionMapper.findById(id);
+        if (submission == null) {
+            throw new BusinessException("提交记录不存在：" + id);
+        }
+        return submission;
+    }
+
+    @Override
+    public List<Submission> listByProblem(Integer problemId) {
+        return submissionMapper.findByProblemId(problemId);
+    }
 }

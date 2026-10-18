@@ -1,5 +1,5 @@
 package com.yzj.pojo;
 
-public record JudgeResult(String verdict, String message) {
+public record JudgeResult(String verdict, String message, long timeCostMs) {
 }
 
