@@ -1,4 +1,4 @@
-package com.yzj.service.Impl;
+package com.yzj.service.impl;
 
 import com.yzj.exception.BusinessException;
 import com.yzj.mapper.ProblemMapper;

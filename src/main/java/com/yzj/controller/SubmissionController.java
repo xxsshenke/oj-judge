@@ -18,9 +18,7 @@ public class SubmissionController {
 
     @GetMapping("/{id}")
     public Result detail(@PathVariable Integer id) {
-        Submission submission = submissionService.detail(id);
-
-        return Result.success(submission);
+        return Result.success(submissionService.detail(id));
     }
 
     @GetMapping

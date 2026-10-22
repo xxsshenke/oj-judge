@@ -1,7 +1,7 @@
 package com.yzj;
 
 import com.yzj.pojo.JudgeResult;
-import com.yzj.service.Impl.JudgeServiceImpl;
+import com.yzj.service.impl.JudgeServiceImpl;
 import com.yzj.service.JudgeService;
 import org.junit.jupiter.api.Test;
 
