@@ -48,12 +48,13 @@ public class JudgeServiceImpl implements JudgeService {
     private static final long TIME_LIMIT_SECONDS = 2;
 
     @Override
-    public JudgeResult judge(String code, String expected) {
+    public JudgeResult judge(String code, String expected, String input) {
         if (code == null || code.isBlank()) {
             return new JudgeResult("CE", "代码不能为空", 0);
         }
+
         try {
-            return doJudge(code, expected);
+            return doJudge(code, expected, input);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new RuntimeException("判题被中断", e);
@@ -62,7 +63,7 @@ public class JudgeServiceImpl implements JudgeService {
         }
     }
 
-    private JudgeResult doJudge(String code, String expected)
+    private JudgeResult doJudge(String code, String expected, String input)
             throws IOException, InterruptedException {
 
         // 每次提交一个独立目录，避免并发覆盖
@@ -70,14 +71,20 @@ public class JudgeServiceImpl implements JudgeService {
                 "oj-judge", UUID.randomUUID().toString());
         Files.createDirectories(workDir);
 
+        File inputFile = null;
+        if (input != null && !input.isEmpty()) {
+            inputFile = workDir.resolve("input.txt").toFile();
+            Files.writeString(inputFile.toPath(), input);
+        }
+
         try {
-            return runInDir(workDir, code, expected);
+            return runInDir(workDir, inputFile, code, expected);
         } finally {
             deleteDir(workDir);
         }
     }
 
-    private JudgeResult runInDir(Path workDir, String code, String expected)
+    private JudgeResult runInDir(Path workDir,File inputFile, String code, String expected)
             throws IOException, InterruptedException {
 
         Files.writeString(workDir.resolve(FILE_NAME), code);
@@ -87,7 +94,7 @@ public class JudgeServiceImpl implements JudgeService {
         File compileOutFile = workDir.resolve("compile_out.txt").toFile();
 
         Process compile = startContainer(workDir, compileContainerName, compileOutFile,
-                List.of("javac",
+                inputFile, List.of("javac",
                         "-J-Duser.language=en",
                         "-J-Duser.country=US",
                         FILE_NAME));
@@ -98,18 +105,22 @@ public class JudgeServiceImpl implements JudgeService {
             killContainer(compileContainerName);
             return new JudgeResult("SE", "编译超时", 0);
         }
-        if (compile.exitValue() != 0) {
+        int compileExitValue = compile.exitValue();
+        if (compileExitValue != 0) {
             // 【修复】从 compile_out.txt 中读取真正的编译错误信息
             String compileOut = Files.exists(compileOutFile.toPath())
                     ? Files.readString(compileOutFile.toPath())
                     : "编译失败，但无错误输出";
-            return new JudgeResult("CE", compileOut, 0);
+            if (compileExitValue == 125) {
+                return new JudgeResult("SE", "判题机环境异常：" + compileOut, 0);   // ⭐ 系统问题
+            }
+            return new JudgeResult("CE", compileOut, 0);   // 用户代码问题
         }
 
         // ---------- ② 运行 ----------
         String runContainerName = "oj-" + UUID.randomUUID().toString().substring(0, 8);
         File outFile = workDir.resolve(OUTPUT_FILE).toFile();
-        Process run = startContainer(workDir, runContainerName, outFile,
+        Process run = startContainer(workDir, runContainerName, outFile, inputFile,
                 List.of("java",
                         "-Xmx128m",
                         "-Duser.language=en",
@@ -132,8 +143,15 @@ public class JudgeServiceImpl implements JudgeService {
         Path outPath = workDir.resolve(OUTPUT_FILE);
         String runOutput = Files.exists(outPath) ? Files.readString(outPath) : "";
 
+        if (runExitCode == 137) {
+            return new JudgeResult("MLE", "内存超限", cost);        // ⭐ OOM Killer
+        }
+
         if (runExitCode != 0) {
-            return new JudgeResult("RE", runOutput, cost);      // ⭐ 先判这个
+            if (runOutput.contains("OutOfMemoryError")) {
+                return new JudgeResult("MLE", "内存超限", cost);    // ⭐ 堆溢出
+            }
+            return new JudgeResult("RE", runOutput, cost);
         }
 
         String actual = runOutput.trim();
@@ -149,24 +167,12 @@ public class JudgeServiceImpl implements JudgeService {
      *
      * @param workDir       宿主机工作目录（会被挂到容器 /work）
      * @param containerName 容器名（超时时用来 kill）
-     * @param cmd           容器内执行的命令
-     */
-    private Process startContainer(Path workDir, String containerName, List<String> cmd)
-            throws IOException {
-
-        return startContainer(workDir, containerName, null, cmd);
-    }
-
-    /**
-     * 启动一个判题容器。
-     *
-     * @param workDir       宿主机工作目录（会被挂到容器 /work）
-     * @param containerName 容器名（超时时用来 kill）
      * @param outputFile    非空则把容器输出重定向到该文件，为空则走管道由调用方读取
      * @param cmd           容器内执行的命令
+     * @param inputFile     输入文件
      */
     private Process startContainer(Path workDir, String containerName, File outputFile,
-                                   List<String> cmd) throws IOException {
+                                   File inputFile, List<String> cmd) throws IOException {
 
         List<String> command = new ArrayList<>();
 
@@ -181,10 +187,12 @@ public class JudgeServiceImpl implements JudgeService {
 
         // ③ docker run 的参数
         command.addAll(List.of(
-                "run", "--rm",
+                "run", "--rm", "-i",
+                "--pids-limit=100",
                 "--name", containerName,
                 "--network=none",
                 "--memory=256m",
+                "--memory-swap=256m",
                 "--cpus=1",
                 "-v", hostPath + ":/work",
                 "-w", "/work",
@@ -194,6 +202,10 @@ public class JudgeServiceImpl implements JudgeService {
         command.addAll(cmd);
 
         ProcessBuilder pb = new ProcessBuilder(command);
+
+        if (inputFile != null) {
+            pb.redirectInput(inputFile);
+        }
 
         if (outputFile != null) {
             pb.redirectErrorStream(true);

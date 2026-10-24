@@ -12,7 +12,7 @@
     </select>
 
     <select id="findById" resultType="com.yzj.pojo.Problem">
-        select id, title, description, expected, difficulty, create_time, update_time
+        select id, title, description, expected, input, difficulty, create_time, update_time
         from problem
         where id = #{id}
     </select>

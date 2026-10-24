@@ -16,6 +16,7 @@ public class Problem {
     private String title;
     private String description;
     private String expected;      // 标准输出，判题用
+    private String input;        // 标准输入 , 判题用
     private Integer difficulty;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;

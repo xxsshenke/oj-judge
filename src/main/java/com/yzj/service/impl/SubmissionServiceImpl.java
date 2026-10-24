@@ -44,7 +44,7 @@ public class SubmissionServiceImpl implements SubmissionService {
         }
 
         // 判题
-        JudgeResult judgeResult = judgeService.judge(req.code(), problem.getExpected());
+        JudgeResult judgeResult = judgeService.judge(req.code(), problem.getExpected(),problem.getInput());
 
         Submission submission = new Submission();
         submission.setProblemId(req.problemId());
