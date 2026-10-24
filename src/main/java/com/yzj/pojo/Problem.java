@@ -20,4 +20,5 @@ public class Problem {
     private Integer difficulty;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
+    private String judgeMode;      // ACM / OI
 }

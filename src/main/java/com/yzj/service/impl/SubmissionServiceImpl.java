@@ -3,10 +3,8 @@ package com.yzj.service.impl;
 import com.yzj.exception.BusinessException;
 import com.yzj.mapper.ProblemMapper;
 import com.yzj.mapper.SubmissionMapper;
-import com.yzj.pojo.JudgeResult;
-import com.yzj.pojo.Problem;
-import com.yzj.pojo.Submission;
-import com.yzj.pojo.SubmitRequest;
+import com.yzj.mapper.TestCaseMapper;
+import com.yzj.pojo.*;
 import com.yzj.service.JudgeService;
 import com.yzj.service.SubmissionService;
 import org.springframework.stereotype.Service;
@@ -20,13 +18,15 @@ public class SubmissionServiceImpl implements SubmissionService {
     private final JudgeService judgeService;
     private final ProblemMapper problemMapper;
     private final SubmissionMapper submissionMapper;
+    private final TestCaseMapper testCaseMapper;
 
     public SubmissionServiceImpl(JudgeService judgeService,
-                             ProblemMapper problemMapper,
-                             SubmissionMapper submissionMapper) {
+                                 ProblemMapper problemMapper,
+                                 SubmissionMapper submissionMapper, TestCaseMapper testCaseMapper) {
         this.judgeService = judgeService;
         this.problemMapper = problemMapper;
         this.submissionMapper = submissionMapper;
+        this.testCaseMapper = testCaseMapper;
     }
 
     @Override
@@ -44,7 +44,18 @@ public class SubmissionServiceImpl implements SubmissionService {
         }
 
         // 判题
-        JudgeResult judgeResult = judgeService.judge(req.code(), problem.getExpected(),problem.getInput());
+        List<TestCase> cases = testCaseMapper.findByProblemId(req.problemId());
+
+        if (cases.isEmpty()) {
+            // ⭐ 回退：旧题目用 problem 上的单测试点字段
+            cases = List.of(new TestCase(null, req.problemId(),
+                    problem.getInput(), problem.getExpected(), 0, 0));
+        }
+
+        boolean isOI = "OI".equals(problem.getJudgeMode());
+
+        JudgeResult judgeResult = judgeService.judge(req.code(), cases, isOI);
+
 
         Submission submission = new Submission();
         submission.setProblemId(req.problemId());
@@ -54,6 +65,7 @@ public class SubmissionServiceImpl implements SubmissionService {
         submission.setMessage(judgeResult.message());
         submission.setTimeCost((int)judgeResult.timeCostMs());
         submission.setCreateTime(LocalDateTime.now());
+        submission.setScore(judgeResult.score());
         submissionMapper.insert(submission);
 
         return submission;

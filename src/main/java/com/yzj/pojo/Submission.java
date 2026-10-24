@@ -13,6 +13,7 @@ public class Submission {
     private Integer id;
     private Integer problemId;
     private String code;
+    private Integer score;
     private String language;
     private String verdict;       // AC/WA/CE/RE/TLE/SE
     private String message;
