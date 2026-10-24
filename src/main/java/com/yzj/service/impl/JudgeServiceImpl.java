@@ -50,6 +50,8 @@ public class JudgeServiceImpl implements JudgeService {
     private static final long TIME_LIMIT_SECONDS = 2;
     /** 实际等待时间，给 docker 启动留余量 */
     private static final long RUN_TIMEOUT_SECONDS = TIME_LIMIT_SECONDS + 3;
+    /* 输出最大空间 */
+    private static final long MAX_OUTPUT_BYTES = 1024 * 1024;   // 1MB
 
     @Override
     public JudgeResult judge(String code, List<TestCase> testCases, boolean isOI) {
@@ -169,6 +171,10 @@ public class JudgeServiceImpl implements JudgeService {
     private JudgeResult runOne(Path workDir, TestCase tc, int index)
             throws IOException, InterruptedException {
 
+        // 避免文件残留导致判题失败
+        Path outPath = workDir.resolve(OUTPUT_FILE);
+        Files.deleteIfExists(outPath);
+
         // ---- 写 input.txt（可空）----
         File inputFile = null;
         if (tc.getInput() != null && !tc.getInput().isEmpty()) {
@@ -198,7 +204,15 @@ public class JudgeServiceImpl implements JudgeService {
 
         long cost = System.currentTimeMillis() - start;
         int exit = p.exitValue();
-        String out = Files.exists(outFile.toPath()) ? Files.readString(outFile.toPath()) : "";
+
+        outPath = workDir.resolve(OUTPUT_FILE);
+
+        long size = Files.exists(outPath) ? Files.size(outPath) : 0;
+
+        if (size > MAX_OUTPUT_BYTES) {
+            return JudgeResult.fail("OLE", "第 " + index + " 个测试点输出超限", cost);
+        }
+        String out = size == 0 ? "" : Files.readString(outPath);
 
         if (exit == 125) {
             return JudgeResult.fail("SE", "判题机环境异常: " + out, cost);
@@ -312,6 +326,7 @@ public class JudgeServiceImpl implements JudgeService {
             walk.sorted(Comparator.reverseOrder()).forEach(JudgeServiceImpl::tryDelete);
         } catch (IOException ignored) {
             // 清理失败不影响判题结果
+            log.warn("文件清理失败");
         }
     }
 
@@ -319,8 +334,7 @@ public class JudgeServiceImpl implements JudgeService {
     private static boolean tryDelete(Path p) {
         for (int i = 0; i < 3; i++) {
             try {
-                Files.deleteIfExists(p);
-                return true;
+                return Files.deleteIfExists(p);
             } catch (IOException e) {
                 try {
                     Thread.sleep(100);

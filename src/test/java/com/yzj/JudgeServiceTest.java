@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class JudgeServiceTest {
 
@@ -97,6 +98,18 @@ class JudgeServiceTest {
         JudgeResult r = judgeService.judge(code, noInput(""), false);
         assertEquals("MLE", r.verdict(), "内存超限时应该判 MLE");
     }
+    @Test
+    void shouldReturnOLEWhenOutputTooLarge() {
+        String code = """
+            public class Main {
+                public static void main(String[] args) {
+                    while (true) System.out.println("HACK HACK HACK HACK HACK");
+                }
+            }
+            """;
+        JudgeResult r = judgeService.judge(code, noInput("x"), false);
+        assertTrue(List.of("OLE","TLE").contains(r.verdict()));
+    }
 
     // ==================== 输入 ====================
 
@@ -183,4 +196,5 @@ class JudgeServiceTest {
         assertEquals(1, r.passedCount(), "应该只通过 1 个测试点");
         assertEquals(3, r.totalCount(), "总共 3 个测试点");
     }
+
 }
