@@ -71,6 +71,7 @@ public class SubmissionServiceImpl implements SubmissionService {
         if (submission == null) {
             throw new BusinessException("提交记录不存在：" + id);
         }
+
         return submission;
     }
 
