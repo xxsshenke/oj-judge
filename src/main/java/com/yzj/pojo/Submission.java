@@ -17,6 +17,7 @@ public class Submission {
     private String language;
     private String verdict;       // AC/WA/CE/RE/TLE/SE
     private String message;
+    private String status;        // 提交状态
     private Integer timeCost;     // 判题耗时 ms
     private LocalDateTime createTime;
 }

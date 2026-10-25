@@ -6,9 +6,24 @@
 <mapper namespace="com.yzj.mapper.SubmissionMapper">
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        insert into submission(problem_id, code, language, verdict, message, time_cost, create_time)
-        values (#{problemId}, #{code}, #{language}, #{verdict}, #{message}, #{timeCost}, #{createTime})
+        insert into submission(problem_id, code, language, verdict, message,
+                               time_cost, score, status, create_time)
+        values (#{problemId}, #{code}, #{language}, #{verdict}, #{message},
+                #{timeCost}, #{score}, #{status}, #{createTime})
     </insert>
+
+    <update id="updateResult">
+        update submission
+        set verdict    = #{verdict},
+            message    = #{message},
+            time_cost  = #{timeCost},
+            score      = #{score},
+            status     = #{status}
+        where id = #{id}
+    </update>
+    <update id="updateStatus">
+        update submission set status = #{status} where id = #{id}
+    </update>
 
     <select id="findById" resultType="com.yzj.pojo.Submission">
         select * from submission where id = #{id}
@@ -18,6 +33,10 @@
         select * from submission
         where problem_id = #{problemId}
         order by create_time desc
+    </select>
+
+    <select id="findByStatus" resultType="com.yzj.pojo.Submission">
+        select * from submission where status = #{status} order by id
     </select>
 
 </mapper>

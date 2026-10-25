@@ -5,6 +5,7 @@ import com.yzj.mapper.ProblemMapper;
 import com.yzj.mapper.SubmissionMapper;
 import com.yzj.mapper.TestCaseMapper;
 import com.yzj.pojo.*;
+import com.yzj.queue.JudgeQueue;
 import com.yzj.service.JudgeService;
 import com.yzj.service.SubmissionService;
 import org.springframework.stereotype.Service;
@@ -15,6 +16,7 @@ import java.util.List;
 @Service
 public class SubmissionServiceImpl implements SubmissionService {
 
+    private final JudgeQueue judgeQueue;
     private final JudgeService judgeService;
     private final ProblemMapper problemMapper;
     private final SubmissionMapper submissionMapper;
@@ -22,52 +24,44 @@ public class SubmissionServiceImpl implements SubmissionService {
 
     public SubmissionServiceImpl(JudgeService judgeService,
                                  ProblemMapper problemMapper,
-                                 SubmissionMapper submissionMapper, TestCaseMapper testCaseMapper) {
+                                 SubmissionMapper submissionMapper,
+                                 TestCaseMapper testCaseMapper,
+                                 JudgeQueue judgeQueue
+                                 ) {
         this.judgeService = judgeService;
         this.problemMapper = problemMapper;
         this.submissionMapper = submissionMapper;
         this.testCaseMapper = testCaseMapper;
+        this.judgeQueue = judgeQueue;
     }
 
     @Override
     public Submission submit(SubmitRequest req) {
 
-        //参数校验
-        if(req.code() == null || req.code().isBlank()){
+        //  参数校验（快速失败，同步做）
+        if (req.code() == null || req.code().isBlank()) {
             throw new BusinessException("代码不能为空");
         }
-
-        //查看题目
         Problem problem = problemMapper.findById(req.problemId());
-        if(problem == null){
-            throw new BusinessException("题目不存在:" + req.problemId());
+        if (problem == null) {
+            throw new BusinessException("题目不存在：" + req.problemId());
         }
 
-        // 判题
-        List<TestCase> cases = testCaseMapper.findByProblemId(req.problemId());
-
-        if (cases.isEmpty()) {
-            // ⭐ 回退：旧题目用 problem 上的单测试点字段
-            cases = List.of(new TestCase(null, req.problemId(),
-                    problem.getInput(), problem.getExpected(), 0, 0));
-        }
-
-        boolean isOI = "OI".equals(problem.getJudgeMode());
-
-        JudgeResult judgeResult = judgeService.judge(req.code(), cases, isOI);
-
-
+        //  落库（status = PENDING）
         Submission submission = new Submission();
         submission.setProblemId(req.problemId());
         submission.setCode(req.code());
         submission.setLanguage("java");
-        submission.setVerdict(judgeResult.verdict());
-        submission.setMessage(judgeResult.message());
-        submission.setTimeCost((int)judgeResult.timeCostMs());
+        submission.setStatus("PENDING");
         submission.setCreateTime(LocalDateTime.now());
-        submission.setScore(judgeResult.score());
-        submissionMapper.insert(submission);
+        submissionMapper.insert(submission);       // insert 之后才有 id
 
+        //  入队
+        if (!judgeQueue.submit(submission.getId())) {
+            throw new BusinessException("判题队列已满，请稍后重试");
+        }
+
+        //  立刻返回（此时 verdict 是 null，前端要轮询）
         return submission;
     }
 
