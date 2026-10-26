@@ -1,7 +1,10 @@
 <script setup>
 import { formatTime } from '@/constants/problem'
 
-defineProps({ submissions: { type: Array, default: () => [] } })
+defineProps({
+  submissions: { type: Array, default: () => [] },
+  judgeMode: { type: String, default: '' },
+})
 const statusType = (status) => status === 'DONE' ? 'success' : 'warning'
 </script>
 
@@ -9,7 +12,7 @@ const statusType = (status) => status === 'DONE' ? 'success' : 'warning'
   <el-table v-if="submissions.length" :data="submissions" size="small" class="submission-table">
     <el-table-column label="Status" width="120"><template #default="scope"><el-tag size="small" :type="statusType(scope.row.status)">{{ scope.row.status || '-' }}</el-tag></template></el-table-column>
     <el-table-column label="Verdict"><template #default="scope"><span :class="'verdict-' + String(scope.row.verdict || '').toLowerCase()">{{ scope.row.verdict || 'Waiting' }}</span></template></el-table-column>
-    <el-table-column label="Score" width="100"><template #default="scope">{{ scope.row.score == null ? '-' : scope.row.score }}</template></el-table-column>
+    <el-table-column v-if="judgeMode === 'OI'" label="Score" width="100"><template #default="scope">{{ scope.row.score == null ? '-' : scope.row.score }}</template></el-table-column>
     <el-table-column label="Time" width="110"><template #default="scope">{{ scope.row.timeCost == null ? '-' : scope.row.timeCost + ' ms' }}</template></el-table-column>
     <el-table-column label="Created"><template #default="scope">{{ formatTime(scope.row.createTime) }}</template></el-table-column>
   </el-table>

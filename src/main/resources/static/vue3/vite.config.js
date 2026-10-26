@@ -9,6 +9,12 @@ export default defineConfig({
     vue(),
   ],
   base: '/',
+  server: {
+    proxy: {
+      '/problems': 'http://localhost:8080',
+      '/submissions': 'http://localhost:8080',
+    },
+  },
   build: {
     outDir: '../',
     emptyOutDir: false,

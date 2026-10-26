@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -20,11 +21,11 @@ import java.util.concurrent.TimeUnit;
  * Docker 沙箱判题。
  *
  * 一次提交的流程：
- *   ① 建独立目录（UUID，防止并发互相覆盖）
- *   ② 写 Main.java
- *   ③ 编译一次（容器 1）
- *   ④ 逐个测试点运行（容器 N）
- *   ⑤ finally 清理目录
+ *    1 建独立目录（UUID，防止并发互相覆盖）
+ *    2 写 Main.java
+ *    3 编译一次（容器 1）
+ *    4 逐个测试点运行（容器 N）
+ *    5 finally 清理目录
  *
  * ACM 模式：任一测试点失败立刻返回
  * OI 模式：跑完全部测试点，按 score 累加得分
@@ -37,7 +38,9 @@ public class JudgeServiceImpl implements JudgeService {
     private static final String CLASS_NAME = "Main";
     private static final String OUTPUT_FILE = "out.txt";
     private static final String COMPILE_OUT_FILE = "compile_out.txt";
+    private static final String COMPILE_ERR_FILE = "compile_err.txt";
     private static final String INPUT_FILE = "input.txt";
+    private static final String ERR_FILE = "err.txt";
 
     private static final String IMAGE = "eclipse-temurin:21-jdk";
     private static final String WSL_DISTRO = "Ubuntu";
@@ -133,7 +136,6 @@ public class JudgeServiceImpl implements JudgeService {
     }
 
     /**
-     * 编译一次。
      *
      * @return null 表示成功；非 null 是 SE 或 CE 的判定结果
      */
@@ -141,9 +143,13 @@ public class JudgeServiceImpl implements JudgeService {
 
         String name = "oj-compile-" + UUID.randomUUID().toString().substring(0, 8);
         File outFile = workDir.resolve(COMPILE_OUT_FILE).toFile();
+        File errFile = workDir.resolve(COMPILE_ERR_FILE).toFile();
+        Files.deleteIfExists(outFile.toPath());
+        Files.deleteIfExists(errFile.toPath());
 
-        Process p = startContainer(workDir, name, outFile, null,
+        Process p = startContainer(workDir, name, outFile, errFile, null,
                 List.of("javac",
+                        "-encoding", "UTF-8",
                         "-J-Duser.language=en",
                         "-J-Duser.country=US",
                         FILE_NAME));
@@ -155,14 +161,18 @@ public class JudgeServiceImpl implements JudgeService {
         }
 
         int exit = p.exitValue();
-        String out = Files.exists(outFile.toPath()) ? Files.readString(outFile.toPath()) : "";
+
+        // javac 的诊断信息写在 stderr
+        String err = readUtf8(errFile.toPath());
+        String out = readUtf8(outFile.toPath());
+        String detail = err.isEmpty() ? out : err;
 
         if (exit == 125) {
             // docker 自己出错（参数错、镜像缺失、daemon 挂了）—— 不是用户的问题
-            return JudgeResult.fail("SE", "判题机环境异常: " + out, 0);
+            return JudgeResult.fail("SE", "判题机环境异常: " + detail, 0);
         }
         if (exit != 0) {
-            return JudgeResult.fail("CE", out, 0);
+            return JudgeResult.fail("CE", detail, 0);
         }
         return null;
     }
@@ -184,8 +194,10 @@ public class JudgeServiceImpl implements JudgeService {
 
         String name = "oj-run-" + UUID.randomUUID().toString().substring(0, 8);
         File outFile = workDir.resolve(OUTPUT_FILE).toFile();
+        File errFile = workDir.resolve(ERR_FILE).toFile();
+        Files.deleteIfExists(errFile.toPath());
 
-        Process p = startContainer(workDir, name, outFile, inputFile,
+        Process p = startContainer(workDir, name, outFile, errFile, inputFile,
                 List.of("java",
                         "-Xmx128m",
                         "-Duser.language=en",
@@ -212,20 +224,22 @@ public class JudgeServiceImpl implements JudgeService {
         if (size > MAX_OUTPUT_BYTES) {
             return JudgeResult.fail("OLE", "第 " + index + " 个测试点输出超限", cost);
         }
-        String out = size == 0 ? "" : Files.readString(outPath);
+        String out = size == 0 ? "" : readUtf8(outPath);
+        String err = readUtf8(errFile.toPath());
 
         if (exit == 125) {
-            return JudgeResult.fail("SE", "判题机环境异常: " + out, cost);
+            return JudgeResult.fail("SE", "判题机环境异常: " + err, cost);
         }
         if (exit == 137) {
             // 被 SIGKILL —— 因为超时已经先行返回，这里只可能是 OOM Killer
             return JudgeResult.fail("MLE", "第 " + index + " 个测试点内存超限", cost);
         }
         if (exit != 0) {
-            if (out.contains("OutOfMemoryError")) {
+            String detail = err.isEmpty() ? out : err;
+            if (detail.contains("OutOfMemoryError")) {
                 return JudgeResult.fail("MLE", "第 " + index + " 个测试点内存超限", cost);
             }
-            return JudgeResult.fail("RE", "第 " + index + " 个测试点运行错误\n" + out, cost);
+            return JudgeResult.fail("RE", "第 " + index + " 个测试点运行错误\n" + detail, cost);
         }
 
         String actual = out.trim();
@@ -249,7 +263,8 @@ public class JudgeServiceImpl implements JudgeService {
      * @param inputFile     非空则把该文件接到容器 stdin（需要 -i）
      * @param cmd           容器内执行的命令
      */
-    private Process startContainer(Path workDir, String containerName, File outputFile,
+    private Process startContainer(Path workDir, String containerName,
+                                   File outputFile, File errorFile,
                                    File inputFile, List<String> cmd) throws IOException {
 
         List<String> command = new ArrayList<>();
@@ -285,8 +300,12 @@ public class JudgeServiceImpl implements JudgeService {
             pb.redirectInput(inputFile);
         }
         if (outputFile != null) {
-            pb.redirectErrorStream(true);
             pb.redirectOutput(outputFile);
+        }
+        // ⚠️ 不要用 redirectErrorStream(true)：wsl.exe 会往 stderr 打 UTF-16 警告，
+        //    混进 stdout 会让 Files.readString 抛 MalformedInputException
+        if (errorFile != null) {
+            pb.redirectError(errorFile);
         }
         return pb.start();
     }
@@ -320,6 +339,15 @@ public class JudgeServiceImpl implements JudgeService {
     }
 
     // ================= 清理 =================
+
+    /** 读文本，遇到非法 UTF-8 字节替换而不是抛异常 */
+    private static String readUtf8(Path p) throws IOException {
+        if (!Files.exists(p)) {
+            return "";
+        }
+        byte[] bytes = Files.readAllBytes(p);
+        return new String(bytes, StandardCharsets.UTF_8);
+    }
 
     private static void deleteDir(Path dir) {
         try (var walk = Files.walk(dir)) {

@@ -31,7 +31,7 @@ public class JudgeWorker {
     private final TestCaseMapper testCaseMapper;
 
     private final List<Thread> workers = new ArrayList<>();
-    private volatile boolean running = true;         // 为什么要 volatile 见下
+    private volatile boolean running = true;
 
     public JudgeWorker(JudgeQueue judgeQueue, JudgeService judgeService, SubmissionMapper submissionMapper, ProblemMapper problemMapper, TestCaseMapper testCaseMapper) {
         this.judgeQueue = judgeQueue;
@@ -43,6 +43,11 @@ public class JudgeWorker {
     @PostConstruct
     public void start() {
         // 把上次没跑完的 PENDING 记录重新入队
+
+        for (Submission s : submissionMapper.findByStatus("JUDGING")) {
+            submissionMapper.updateStatus(s.getId(), "SE");
+        }
+
         for (Submission s : submissionMapper.findByStatus("PENDING")) {
             judgeQueue.submit(s.getId());
         }
@@ -78,8 +83,16 @@ public class JudgeWorker {
         }
     }
 
-    /** 判一条提交 */
     private void process(Integer submissionId) {
+        try {
+            doProcess(submissionId);
+        } catch (Exception e) {
+            log.error("判题异常，置为 SE: {}", submissionId, e);
+            submissionMapper.updateStatus(submissionId, "SE");     //  兜底
+        }
+    }
+    /** 判一条提交 */
+    private void doProcess(Integer submissionId) {
 
         Submission record = submissionMapper.findById(submissionId);
 
@@ -129,6 +142,7 @@ public class JudgeWorker {
             record.setVerdict("SE");  // 判题机系统错误
             record.setMessage("判题机内部异常: " + e.getMessage());
             record.setTimeCost(0);
+            submissionMapper.updateResult(record);
         }
 
         submissionMapper.updateResult(record);
