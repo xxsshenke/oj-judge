@@ -10,7 +10,6 @@ public record JudgeResult(
         Integer passedCount,  // 通过的测试点数
         Integer totalCount    // 测试点总数
 ) {
-
     /** ACM 通过 */
     public static JudgeResult ac(long cost) {
         return new JudgeResult("AC", null, cost, null, null, null);

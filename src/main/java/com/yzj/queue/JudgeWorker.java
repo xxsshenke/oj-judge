@@ -64,7 +64,7 @@ public class JudgeWorker {
     @PreDestroy
     public void stop() {
         running = false;
-        workers.forEach(Thread::interrupt);          // ⭐ 关键：打断阻塞的 take()
+        workers.forEach(Thread::interrupt);          // 关键：打断阻塞的 take()
         log.info("判题机池关闭");
     }
 
@@ -121,9 +121,15 @@ public class JudgeWorker {
             throw new BusinessException("题目不存在");
         }
 
-        if (cases.isEmpty()) {
-            cases = List.of(new TestCase(null, problemId,
-                    problem.getInput(), problem.getExpected(), 0, 0));
+        if (cases == null || cases.isEmpty()) {
+            cases = List.of(new TestCase(
+                    null,
+                    problemId,
+                    problem.getInput(),
+                    problem.getExpected(),
+                    0,
+                    0
+            ));
         }
 
         boolean isOi = "OI".equals(problem.getJudgeMode());
@@ -142,7 +148,6 @@ public class JudgeWorker {
             record.setVerdict("SE");  // 判题机系统错误
             record.setMessage("判题机内部异常: " + e.getMessage());
             record.setTimeCost(0);
-            submissionMapper.updateResult(record);
         }
 
         submissionMapper.updateResult(record);

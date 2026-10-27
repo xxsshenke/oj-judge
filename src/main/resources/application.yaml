@@ -6,6 +6,16 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: root
     password: 123456
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      lettuce:
+        pool:
+           max-active: 16      # 最大连接数
+           max-idle: 8
+           min-idle: 2
+           max-wait: 2s
 
 mybatis:
   configuration:
@@ -13,4 +23,5 @@ mybatis:
     map-underscore-to-camel-case: true
     # 把执行的 SQL 打到控制台，调试用
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
 

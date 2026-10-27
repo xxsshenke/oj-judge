@@ -101,7 +101,7 @@ public class JudgeServiceImpl implements JudgeService {
             return compileFail;
         }
 
-        // ③ 逐个测试点
+        //  逐个测试点
         int totalScore = 0;
         int maxScore = 0;
         int passed = 0;
@@ -207,7 +207,7 @@ public class JudgeServiceImpl implements JudgeService {
         long start = System.currentTimeMillis();
 
         if (!p.waitFor(RUN_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
-            // ⚠️ destroyForcibly 只杀 docker 客户端，容器还活着
+            //  destroyForcibly 只杀 docker 客户端，容器还活着
             p.destroyForcibly();
             killContainer(name);
             return JudgeResult.fail("TLE", "第 " + index + " 个测试点超时",
@@ -269,16 +269,16 @@ public class JudgeServiceImpl implements JudgeService {
 
         List<String> command = new ArrayList<>();
 
-        // ① 命令前缀：Windows 走 WSL，Linux 直接用
+        //  命令前缀：Windows 走 WSL，Linux 直接用
         if (IS_WINDOWS) {
             command.addAll(List.of("wsl", "-d", WSL_DISTRO, "--"));
         }
         command.add("docker");
 
-        // ② 挂载路径（Windows 要转 /mnt/c/...）
+        //  挂载路径（Windows 要转 /mnt/c/...）
         String hostPath = IS_WINDOWS ? toWslPath(workDir) : workDir.toString();
 
-        // ③ docker run 参数
+        //  docker run 参数
         command.addAll(List.of(
                 "run", "--rm", "-i",
                 "--pids-limit=100",
@@ -291,7 +291,7 @@ public class JudgeServiceImpl implements JudgeService {
                 "-w", "/work",
                 IMAGE));
 
-        // ④ 容器内命令
+        //  容器内命令
         command.addAll(cmd);
 
         ProcessBuilder pb = new ProcessBuilder(command);
@@ -302,8 +302,9 @@ public class JudgeServiceImpl implements JudgeService {
         if (outputFile != null) {
             pb.redirectOutput(outputFile);
         }
-        // ⚠️ 不要用 redirectErrorStream(true)：wsl.exe 会往 stderr 打 UTF-16 警告，
-        //    混进 stdout 会让 Files.readString 抛 MalformedInputException
+    // 不要合并 stdout 和 stderr：Windows 下 wsl.exe 的 stderr 可能包含
+    // 非 UTF-8 字节。合并后若按 UTF-8 严格读取，可能抛 MalformedInputException；
+    // 同时系统诊断信息也会污染用户程序输出，导致误判 WA。
         if (errorFile != null) {
             pb.redirectError(errorFile);
         }
