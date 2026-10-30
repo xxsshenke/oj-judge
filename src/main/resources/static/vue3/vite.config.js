@@ -12,7 +12,9 @@ export default defineConfig({
   server: {
     proxy: {
       '/problems': 'http://localhost:8080',
+      '/problem-sets': 'http://localhost:8080',
       '/submissions': 'http://localhost:8080',
+      '/users': 'http://localhost:8080',
     },
   },
   build: {

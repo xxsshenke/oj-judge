@@ -5,8 +5,15 @@
 
 <mapper namespace="com.yzj.mapper.ProblemMapper">
 
+    <!--
+      说明：input / expected 是“题面示例”，只用于解题页展示，不参与判题。
+      判题统一走 test_case 表（见 JudgeWorker），这样可以避免把示例输出当成唯一答案，
+      也避免只输出样例就骗过判题。findAll / findDetailById 补查这两列，
+      是因为解题页需要渲染“示例输入/输出”区块；findById 是判题链路在用，不需要 description。
+    -->
+
     <select id="findAll" resultType="com.yzj.pojo.Problem">
-        select id, title, description, difficulty, create_time, update_time, judge_mode
+        select id, title, description, input, expected, difficulty, create_time, update_time, judge_mode
         from problem
         order by id
     </select>
@@ -18,7 +25,7 @@
     </select>
 
     <select id="findDetailById" resultType="com.yzj.pojo.Problem">
-        select id, title, description, difficulty, create_time, update_time, judge_mode
+        select id, title, description, input, expected, difficulty, create_time, update_time, judge_mode
         from problem
         where id = #{id}
     </select>

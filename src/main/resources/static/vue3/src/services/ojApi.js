@@ -35,3 +35,24 @@ export async function listSubmissions(problemId) {
 export async function submitSolution(problemId, code) {
   return request('/submissions', { method: 'POST', body: JSON.stringify({ problemId, code }) })
 }
+
+export async function getProblemSetOverview() {
+  return request('/problem-sets/overview')
+}
+
+export async function listProblemSetProblems({ keyword, difficulty, tag } = {}) {
+  const params = new URLSearchParams()
+  if (keyword) params.set('keyword', keyword)
+  if (difficulty) params.set('difficulty', difficulty)
+  if (tag) params.set('tag', tag)
+  const query = params.toString()
+  return (await request('/problem-sets/problems' + (query ? '?' + query : ''))) || []
+}
+
+export async function getProblem(id) {
+  return request('/problems/' + id)
+}
+
+export async function getCurrentUser() {
+  return request('/users/current')
+}

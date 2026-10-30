@@ -121,16 +121,10 @@ public class JudgeWorker {
             throw new BusinessException("题目不存在");
         }
 
-        if (cases == null || cases.isEmpty()) {
-            cases = List.of(new TestCase(
-                    null,
-                    problemId,
-                    problem.getInput(),
-                    problem.getExpected(),
-                    0,
-                    0
-            ));
-        }
+        // 这里刻意不做“测试点为空就退回用 problem.input/expected 判一次”的兜底。
+        // 旧逻辑下题目没配测试点时只比对页面样例，用户原样输出样例就能 AC，属于判题漏洞。
+        // 现在 cases 为空会由 JudgeService.judge 统一返回 SE（题目没有配置测试点），
+        // 让数据缺失显式暴露，而不是伪装成通过。
 
         boolean isOi = "OI".equals(problem.getJudgeMode());
 

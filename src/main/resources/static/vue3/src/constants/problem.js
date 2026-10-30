@@ -15,6 +15,27 @@ export const starterCode = (problem) => [
   '}',
 ].join(String.fromCharCode(10))
 
+export const verdictText = (verdict) => ({
+  AC: '通过',
+  WA: '答案错误',
+  TLE: '运行超时',
+  MLE: '内存超限',
+  RE: '运行错误',
+  CE: '编译错误',
+  SE: '系统错误',
+  PE: '格式错误',
+}[verdict] || verdict || '等待评测')
+
+export const verdictTone = (verdict) => ({
+  AC: 'ac',
+  WA: 'bad',
+  RE: 'bad',
+  CE: 'bad',
+  TLE: 'warn',
+  MLE: 'warn',
+  PE: 'warn',
+}[verdict] || 'neutral')
+
 export const formatTime = (value) => {
   if (!value) return 'just now'
 

@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yzj.mapper.ProblemSetMapper">
+
+    <!--
+      题库列表查询：题目 LEFT JOIN 提交记录，在数据库侧完成“一题一行”的聚合。
+
+      几个容易踩错的点：
+      1. 必须 LEFT JOIN：没人提交过的题也要出现在题库里；若用 INNER JOIN 会直接漏题。
+      2. 必须 count(s.id) 而不是 count(*)：左连接后无提交的题也会产生一行 s.* 全为 NULL 的记录，
+         count(*) 会把它算成 1，count(s.id) 只数非空值，结果才是真实的 0。
+      3. sum(...) 在无提交行上返回 NULL，所以外层用 coalesce 兜底；
+         “solved” 的 case 判断在 NULL 时走 ELSE 分支得到 0，不会出现 NULL 映射失败。
+      4. solved 表示“历史上出现过 AC”，attempted 表示“有过任意提交”，
+         二者结合给前端三态：已通过（solved=1）/ 尝试过（attempted=1, solved=0）/ 未开始。
+      5. submission 表当前没有 user_id（登录未接入），所以统计的是全站提交。
+         接入登录后需要在这里补 s.user_id = #{userId}，否则每个人的进度都会一样。
+      6. keyword 有两种命中方式：标题模糊匹配，或题号完全相等。
+         题号用 cast(... as char) 做字符串比较，所以 "09" 不会等于 9（前端已先剥掉开头的 #）。
+      7. tag 用 find_in_set 匹配，只能命中逗号分隔的完整标签，不支持子串；
+         例如 tag=数组 不会命中 "二维数组"，标签里也不能有空格（写入时已约定）。
+      8. group by 列出所有非聚合列，兼容 MySQL 的 ONLY_FULL_GROUP_BY 模式。
+    -->
+    <select id="findProblems" resultType="com.yzj.pojo.ProblemSetItem">
+        select p.id,
+               p.title,
+               p.difficulty,
+               p.tags,
+               count(s.id)                                                          as submit_count,
+               coalesce(sum(case when s.verdict = 'AC' then 1 else 0 end), 0)        as accepted_count,
+               case when sum(case when s.verdict = 'AC' then 1 else 0 end) > 0
+                    then 1 else 0 end                                               as solved,
+               case when count(s.id) > 0 then 1 else 0 end                          as attempted
+        from problem p
+        left join submission s on s.problem_id = p.id
+        <where>
+            <if test="keyword != null and keyword != ''">
+                and (p.title like concat('%', #{keyword}, '%') or cast(p.id as char) = #{keyword})
+            </if>
+            <if test="difficulty != null">
+                and p.difficulty = #{difficulty}
+            </if>
+            <if test="tag != null and tag != ''">
+                and find_in_set(#{tag}, p.tags)
+            </if>
+        </where>
+        group by p.id, p.title, p.difficulty, p.tags
+        order by p.id
+    </select>
+
+    <!-- 原始标签串，一行一题；由调用方自行拆分、去重、计数 -->
+    <select id="findAllTags" resultType="java.lang.String">
+        select tags
+        from problem
+        where tags is not null
+          and tags &lt;&gt; ''
+    </select>
+
+</mapper>

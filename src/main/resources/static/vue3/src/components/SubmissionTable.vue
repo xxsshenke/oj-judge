@@ -1,20 +1,129 @@
 <script setup>
-import { formatTime } from '@/constants/problem'
+import { formatTime, verdictText, verdictTone } from '@/constants/problem'
 
 defineProps({
   submissions: { type: Array, default: () => [] },
   judgeMode: { type: String, default: '' },
 })
-const statusType = (status) => status === 'DONE' ? 'success' : 'warning'
 </script>
 
 <template>
   <el-table v-if="submissions.length" :data="submissions" size="small" class="submission-table">
-    <el-table-column label="Status" width="120"><template #default="scope"><el-tag size="small" :type="statusType(scope.row.status)">{{ scope.row.status || '-' }}</el-tag></template></el-table-column>
-    <el-table-column label="Verdict"><template #default="scope"><span :class="'verdict-' + String(scope.row.verdict || '').toLowerCase()">{{ scope.row.verdict || 'Waiting' }}</span></template></el-table-column>
-    <el-table-column v-if="judgeMode === 'OI'" label="Score" width="100"><template #default="scope">{{ scope.row.score == null ? '-' : scope.row.score }}</template></el-table-column>
-    <el-table-column label="Time" width="110"><template #default="scope">{{ scope.row.timeCost == null ? '-' : scope.row.timeCost + ' ms' }}</template></el-table-column>
-    <el-table-column label="Created"><template #default="scope">{{ formatTime(scope.row.createTime) }}</template></el-table-column>
+    <el-table-column label="结果" width="130">
+      <template #default="scope">
+        <span class="verdict" :class="'tone-' + verdictTone(scope.row.verdict)">{{ verdictText(scope.row.verdict) }}</span>
+      </template>
+    </el-table-column>
+    <el-table-column v-if="judgeMode === 'OI'" label="得分" width="90">
+      <template #default="scope">{{ scope.row.score == null ? '-' : scope.row.score }}</template>
+    </el-table-column>
+    <el-table-column label="耗时" width="130">
+      <template #default="scope">
+        <span class="num">{{ scope.row.timeCost == null ? '-' : scope.row.timeCost + ' ms' }}</span>
+      </template>
+    </el-table-column>
+    <el-table-column label="信息" min-width="220" show-overflow-tooltip>
+      <template #default="scope">
+        <span class="msg">{{ scope.row.message || '' }}</span>
+      </template>
+    </el-table-column>
+    <el-table-column label="提交时间" width="150" align="right">
+      <template #default="scope">
+        <span class="num">{{ formatTime(scope.row.createTime) }}</span>
+      </template>
+    </el-table-column>
   </el-table>
-  <div v-else class="empty-state">&#x8FD8;&#x6CA1;&#x6709;&#x63D0;&#x4EA4;&#xFF0C;&#x5199;&#x4E0B;&#x4F60;&#x7684;&#x7B2C;&#x4E00;&#x4E2A;&#x89E3;&#x6CD5;&#x5427;&#x3002;</div>
+  <div v-else class="empty-state">
+    <span>还没有提交记录</span>
+    <p>写好第一份解法并提交后，这里会按时间倒序列出每次评测结果。</p>
+  </div>
 </template>
+
+<style scoped>
+.submission-table {
+  width: 100%;
+  --el-table-border-color: var(--line-soft);
+  --el-table-header-bg-color: var(--surface-2);
+  --el-table-row-hover-bg-color: var(--surface-2);
+}
+
+:deep(th.el-table__cell) {
+  padding: 9px 0;
+  background: var(--surface-2);
+  color: var(--ink-3);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+:deep(td.el-table__cell) {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line-soft);
+  color: var(--ink-2);
+  font-size: 13px;
+}
+
+:deep(.el-table__inner-wrapper::before) {
+  display: none;
+}
+
+:deep(.el-table__row:last-child td.el-table__cell) {
+  border-bottom: 0;
+}
+
+.verdict {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: var(--r-sm);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.tone-ac {
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+}
+
+.tone-bad {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.tone-warn {
+  background: var(--warn-soft);
+  color: var(--warn);
+}
+
+.tone-neutral {
+  background: var(--surface-2);
+  color: var(--ink-3);
+}
+
+.num {
+  color: var(--ink-3);
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.msg {
+  color: var(--ink-3);
+  font-size: 12.5px;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 46px 16px 40px;
+  color: var(--ink-3);
+  font-size: 13px;
+}
+
+.empty-state p {
+  color: var(--ink-4);
+  font-size: 12px;
+}
+</style>

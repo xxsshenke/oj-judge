@@ -16,6 +16,11 @@ spring:
            max-idle: 8
            min-idle: 2
            max-wait: 2s
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: admin
+    password: admin
 
 mybatis:
   configuration:
@@ -23,5 +28,6 @@ mybatis:
     map-underscore-to-camel-case: true
     # 把执行的 SQL 打到控制台，调试用
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
 
 
