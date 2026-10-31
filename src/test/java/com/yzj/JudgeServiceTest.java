@@ -1,11 +1,14 @@
 package com.yzj;
 
+import cn.hutool.json.JSONUtil;
 import com.yzj.pojo.JudgeResult;
+import com.yzj.pojo.Problem;
 import com.yzj.pojo.TestCase;
 import com.yzj.service.impl.JudgeServiceImpl;
 import com.yzj.service.JudgeService;
 import org.junit.jupiter.api.Test;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -196,5 +199,18 @@ class JudgeServiceTest {
         assertEquals(1, r.passedCount(), "应该只通过 1 个测试点");
         assertEquals(3, r.totalCount(), "总共 3 个测试点");
     }
+    // hutool 测试
+    @Test
+    void shouldRoundTripProblemWithHutool() {
+        Problem p = new Problem();
+        p.setId(1);
+        p.setTitle("A+B");
+        p.setCreateTime(LocalDateTime.of(2026, 10, 22, 2, 53, 42));
 
+        String json = JSONUtil.toJsonStr(p);
+        System.out.println(json);
+
+        Problem back = JSONUtil.toBean(json, Problem.class);
+        assertEquals(p.getCreateTime(), back.getCreateTime());
+    }
 }
