@@ -1,6 +1,8 @@
 package com.yzj;
 
 import org.junit.jupiter.api.Test;
+import org.redisson.api.RedissonClient;
+import org.redisson.client.RedisClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -16,8 +18,10 @@ public class RedisTest {
 
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
+
     @Test
     void testString(){
+
 
 
         stringRedisTemplate.opsForValue().set("name","jack");

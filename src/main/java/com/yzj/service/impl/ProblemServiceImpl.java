@@ -1,7 +1,5 @@
 package com.yzj.service.impl;
 
-import cn.hutool.core.lang.UUID;
-import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.json.JSONUtil;
 import com.yzj.exception.BusinessException;
 import com.yzj.mapper.ProblemMapper;
@@ -9,11 +7,15 @@ import com.yzj.pojo.Problem;
 import com.yzj.service.ProblemService;
 import com.yzj.utils.RedisConstant;
 import java.util.concurrent.ThreadLocalRandom;
+
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 
 @Service
@@ -23,10 +25,12 @@ public class ProblemServiceImpl implements ProblemService {
 
     private final StringRedisTemplate redis;
 
+    private final RedissonClient redissonClient;
 
-    public ProblemServiceImpl(ProblemMapper problemMapper, StringRedisTemplate redis) {
+    public ProblemServiceImpl(ProblemMapper problemMapper, StringRedisTemplate redis, RedissonClient redissonClient) {
         this.problemMapper = problemMapper;
         this.redis = redis;
+        this.redissonClient = redissonClient;
     }
 
     @Override
@@ -41,45 +45,36 @@ public class ProblemServiceImpl implements ProblemService {
         Problem cached = readCache(key, id);
         if (cached != null) return cached;
 
-        String lockKey = RedisConstant.CACHE_LOCK_KEY + id;
-        String token = UUID.randomUUID().toString();
+        RLock lock = redissonClient.getLock(RedisConstant.CACHE_LOCK_KEY + id);
 
-        boolean locked = tryLock(lockKey, token);
+        boolean locked;
+        try {
+            // 只等 200ms：大约是一次查库的时间。等不到就说明别人正在重建，
+            // 直接读缓存即可，不必陪着阻塞 5 秒
+            locked = lock.tryLock(200, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new BusinessException("请求被中断");
+        }
 
         if (!locked) {
-            // 没抢到 → 等别人建好
-            for (int i = 0; i < 20; i++) {
-                try {
-                    Thread.sleep(50);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-                cached = readCache(key, id);
-                if (cached != null) return cached;
-            }
-            // 等太久，直接查库兜底
-            return queryAndCache(key, id);
+            // 等满了还没拿到：先看是不是别人已经建好了
+            cached = readCache(key, id);
+            if (cached != null) return cached;
+            throw new BusinessException("系统繁忙，请稍后重试");
         }
 
         try {
-            cached = readCache(key, id);       // ⭐ 双重检查
+            cached = readCache(key, id);       // 双重检查
             if (cached != null) return cached;
             return queryAndCache(key, id);
         } finally {
-            unLock(lockKey, token);
+            if (lock.isHeldByCurrentThread()) {
+                lock.unlock();
+            }
         }
     }
 
-    private boolean tryLock(String key,String uuid){
-        Boolean ok = redis.opsForValue().setIfAbsent(key, uuid, Duration.ofSeconds(10));
-        return BooleanUtil.isTrue(ok);
-    }
-
-    private void unLock(String key,String uuid){
-        if(uuid.equals(redis.opsForValue().get(key))){
-            redis.delete(key);
-        }
-    }
     private Problem readCache(String key, Integer id) {
         String cache = redis.opsForValue().get(key);
         if (cache == null) return null;
