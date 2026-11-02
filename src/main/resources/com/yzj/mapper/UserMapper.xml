@@ -24,4 +24,11 @@
         where id = #{id}
     </select>
 
+    <!-- 登录专用：需要 password 做 BCrypt 校验，其他字段按需带出 -->
+    <select id="findByUsername" resultType="com.yzj.pojo.User">
+        select id, username, nickname, password, role, status
+        from `user`
+        where username = #{username}
+    </select>
+
 </mapper>

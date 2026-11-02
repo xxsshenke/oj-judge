@@ -7,9 +7,9 @@
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         insert into submission(problem_id, code, language, verdict, message,
-                               time_cost, score, status, create_time)
+                               time_cost, score, status, user_id, create_time)
         values (#{problemId}, #{code}, #{language}, #{verdict}, #{message},
-                #{timeCost}, #{score}, #{status}, #{createTime})
+                #{timeCost}, #{score}, #{status}, #{userId}, #{createTime})
     </insert>
 
     <update id="updateResult">

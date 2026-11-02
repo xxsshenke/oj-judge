@@ -8,6 +8,7 @@ import com.yzj.pojo.*;
 import com.yzj.queue.JudgeQueue;
 import com.yzj.service.JudgeService;
 import com.yzj.service.SubmissionService;
+import com.yzj.utils.UserHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -53,6 +54,7 @@ public class SubmissionServiceImpl implements SubmissionService {
         submission.setCode(req.code());
         submission.setLanguage("java");
         submission.setStatus("PENDING");
+        submission.setUserId(UserHolder.get());      // 登录用户，由 RefreshTokenInterceptor 写入
         submission.setCreateTime(LocalDateTime.now());
         submissionMapper.insert(submission);       // insert 之后才有 id
 

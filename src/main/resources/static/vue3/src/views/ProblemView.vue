@@ -3,8 +3,10 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import CodeEditor from '@/components/CodeEditor.vue'
+import LoginDialog from '@/components/LoginDialog.vue'
 import { starterCode } from '@/constants/problem'
 import { listProblems, listSubmissions, submitSolution } from '@/services/ojApi'
+import { auth, isLoggedIn } from '@/services/auth'
 
 const route = useRoute()
 const router = useRouter()
@@ -20,6 +22,7 @@ const listOpen = ref(false)
 const search = ref('')
 const descOpen = ref(true)
 const editorRef = ref(null)
+const loginVisible = ref(false)
 
 let pollTimer = null
 let pollStartedAt = 0
@@ -218,6 +221,12 @@ async function submitCode() {
     editorRef.value?.showResult()
     startPolling()
   } catch (error) {
+    // 401 会由 ojApi 统一清登录态；这里补一个登录弹窗，
+    // 因为题目页是全屏布局，看不到顶部导航的登录按钮
+    if (error?.unauthorized) {
+      loginVisible.value = true
+      return
+    }
     pageError.value = requestErrorMessage(error)
     ElMessage.error(pageError.value)
   } finally {
@@ -322,6 +331,18 @@ onBeforeUnmount(() => {
           </svg>
           我的提交
         </button>
+
+        <!-- 未登录时显示登录按钮；登录后显示用户名 -->
+        <button
+          v-if="!isLoggedIn()"
+          class="header-action header-login"
+          type="button"
+          @click="loginVisible = true"
+        >
+          登录
+        </button>
+        <span v-else class="header-user">{{ auth.user?.nickname || auth.user?.username }}</span>
+
         <span class="avatar" title="个人主页" role="button" tabindex="0" aria-label="个人主页" @click="openProfile" @keydown.enter="openProfile">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.9">
             <circle cx="12" cy="8.5" r="3.4" />
@@ -464,6 +485,8 @@ onBeforeUnmount(() => {
         <div v-if="!filteredProblems.length" class="drawer-empty">没有匹配的题目</div>
       </div>
     </el-drawer>
+
+    <LoginDialog v-model="loginVisible" />
   </main>
 </template>
 
@@ -587,6 +610,22 @@ onBeforeUnmount(() => {
   background: linear-gradient(150deg, #414c58, #222a32);
   color: #ffffff;
   transition: box-shadow 0.15s ease;
+}
+
+/* 题目页顶栏的登录按钮 / 用户名 */
+.header-login {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.header-user {
+  margin-left: 8px;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12.5px;
+  color: var(--ink-3);
 }
 
 .avatar:hover {

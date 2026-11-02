@@ -19,5 +19,6 @@ public class Submission {
     private String message;
     private String status;        // 提交状态
     private Integer timeCost;     // 判题耗时 ms
+    private Integer userId;       // 提交者用户 ID
     private LocalDateTime createTime;
 }

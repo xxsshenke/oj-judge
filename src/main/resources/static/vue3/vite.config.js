@@ -15,6 +15,8 @@ export default defineConfig({
       '/problem-sets': 'http://localhost:8080',
       '/submissions': 'http://localhost:8080',
       '/users': 'http://localhost:8080',
+      '/login': 'http://localhost:8080',
+      '/logout': 'http://localhost:8080',
     },
   },
   build: {
