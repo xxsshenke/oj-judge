@@ -390,8 +390,14 @@ defineExpose({ showResult, focusEditor: () => view?.focus() })
             <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M8 5.5v13l11-6.5z" /></svg>
             自测运行
           </button>
-          <button class="submit-button" type="button" title="代码草稿会自动保存在本地浏览器" :disabled="submitting" @click="emit('submit')">
-            {{ submitting ? '提交中…' : '保存并提交' }}
+          <button
+            class="submit-button"
+            type="button"
+            :title="pending ? '上一次提交还在判题中，请等待结果' : '代码草稿会自动保存在本地浏览器'"
+            :disabled="pending"
+            @click="emit('submit')"
+          >
+            {{ submitting ? '提交中…' : pending ? '判题中…' : '保存并提交' }}
           </button>
         </div>
       </div>
