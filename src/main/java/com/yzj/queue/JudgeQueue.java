@@ -1,32 +1,21 @@
 package com.yzj.queue;
 
-import org.springframework.stereotype.Component;
-
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-
 /**
- * 提交队列：接口线程放，判题线程取。
- * 有界队列 —— 满了直接拒绝，不阻塞接口。
+ * 判题任务队列。
+ *
+ * 两种实现按 profile 切换：
+ *   - 默认（!mq）：MemoryJudgeQueue，进程内 ArrayBlockingQueue，由 JudgeWorker 起线程消费
+ *   - mq：RabbitJudgeQueue，消息发到 RabbitMQ，由 RabbitJudgeListener 消费
+ *
+ * 接口只保留"投递"这一件事；"怎么取"由各实现自己决定
+ * （内存版靠 take() 阻塞拉取，MQ 版由 broker 推过来）。
  */
-@Component
-public class JudgeQueue {
+public interface JudgeQueue {
 
-    private static final int CAPACITY = 100;
-
-    private final BlockingQueue<Integer> queue = new ArrayBlockingQueue<>(CAPACITY);
-
-    /** 入队。返回 false 表示队列已满。 */
-    public boolean submit(Integer submissionId) {
-        return queue.offer(submissionId);
-    }
-
-    /** 取任务。队列空时【阻塞】。 */
-    public Integer take() throws InterruptedException {
-        return queue.take();
-    }
-
-    public int size() {
-        return queue.size();
-    }
+    /**
+     * 投递一条待判提交。
+     *
+     * @return false 表示投递失败（内存队列已满）；MQ 模式下基本总是 true
+     */
+    boolean submit(Integer submissionId);
 }

@@ -12,6 +12,7 @@ import com.yzj.service.JudgeService;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -30,6 +31,10 @@ public class JudgeWorker {
     private final ProblemMapper problemMapper;
     private final TestCaseMapper testCaseMapper;
 
+    /** MQ 模式下这个 Bean 不存在，所以用 required=false；只有内存模式才自己起消费线程 */
+    @Autowired(required = false)
+    private MemoryJudgeQueue memoryQueue;
+
     private final List<Thread> workers = new ArrayList<>();
     private volatile boolean running = true;
 
@@ -42,7 +47,7 @@ public class JudgeWorker {
     }
     @PostConstruct
     public void start() {
-        // 把上次没跑完的 PENDING 记录重新入队
+        // 把上次没跑完的 PENDING 记录重新投递
 
         for (Submission s : submissionMapper.findByStatus("JUDGING")) {
             submissionMapper.updateStatus(s.getId(), "SE");
@@ -52,7 +57,12 @@ public class JudgeWorker {
             judgeQueue.submit(s.getId());
         }
 
-        //  启动 WORKER_COUNT 个线程
+        // 只有内存模式需要自己起消费线程；MQ 模式由 RabbitJudgeListener 消费
+        if (memoryQueue == null) {
+            log.info("判题机池：MQ 模式，本地不启动消费线程");
+            return;
+        }
+
         for (int i = 0; i < WORKER_COUNT; i++) {
             Thread t = new Thread(this::loop, "judge-" + i);
             t.start();
@@ -71,7 +81,7 @@ public class JudgeWorker {
     private void loop() {
         while (running) {
             try {
-                Integer submissionId = judgeQueue.take();
+                Integer submissionId = memoryQueue.take();
                 process(submissionId);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
@@ -83,7 +93,10 @@ public class JudgeWorker {
         }
     }
 
-    private void process(Integer submissionId) {
+    /**
+     * 判一条提交。设为 public 是因为 MQ 模式的监听器要复用同一段判题逻辑。
+     */
+    public void process(Integer submissionId) {
         try {
             doProcess(submissionId);
         } catch (Exception e) {

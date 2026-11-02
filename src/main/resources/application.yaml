@@ -21,6 +21,13 @@ spring:
     port: 5672
     username: admin
     password: admin
+    listener:
+      simple:
+        # 判题是重任务：一次只预取一条，避免消息全堆在 Unacked 里
+        # 而其他判题机抢不到活
+        prefetch: 1
+        concurrency: 2
+        max-concurrency: 4
 
 mybatis:
   configuration:
