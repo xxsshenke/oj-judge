@@ -5,6 +5,15 @@
 
 <mapper namespace="com.yzj.mapper.SubmissionMapper">
 
+    <!--
+      列表专用列：故意不包含 code。
+      列表页只需要"结果 / 耗时 / 时间"，源码走详情接口单独取。
+      Submission.code 查出来是 null，前端不会再拿到大字段。
+    -->
+    <sql id="listColumns">
+        id, problem_id, language, verdict, message, time_cost, score, status, user_id, create_time
+    </sql>
+
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         insert into submission(problem_id, code, language, verdict, message,
                                time_cost, score, status, user_id, create_time)
@@ -29,10 +38,24 @@
         select * from submission where id = #{id}
     </select>
 
-    <select id="findByProblemId" resultType="com.yzj.pojo.Submission">
-        select * from submission
+    <!--
+      分页查询。
+      排序用 (create_time desc, id desc) 而不是只按 create_time：
+      同一秒内的批量提交 create_time 完全相同（实测 48 条里只有 28 个不同的时间），
+      只按时间排序时 MySQL 不保证同值行的相对顺序，翻页会出现
+      "第 1 页和第 2 页重复同一条 / 漏掉某一条"。
+      加上 id 后排序是全序的，分页结果才稳定。
+    -->
+    <select id="findPageByProblemId" resultType="com.yzj.pojo.Submission">
+        select <include refid="listColumns"/>
+        from submission
         where problem_id = #{problemId}
-        order by create_time desc
+        order by create_time desc, id desc
+        limit #{limit} offset #{offset}
+    </select>
+
+    <select id="countByProblemId" resultType="long">
+        select count(*) from submission where problem_id = #{problemId}
     </select>
 
     <select id="findByStatus" resultType="com.yzj.pojo.Submission">

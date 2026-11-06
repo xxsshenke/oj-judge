@@ -66,8 +66,41 @@ export async function getProblem(id) {
   return request('/problems/' + id)
 }
 
+/**
+ * 提交记录分页查询。
+ *
+ * 后端返回的是分页对象，不是数组：
+ *   { records, total, pageNum, pageSize, pages, hasNext, hasPre }
+ * 这里做一层兜底，保证后端异常返回时前端拿到的是结构完整、可直接渲染的对象，
+ * 而不是 undefined 报错。
+ */
+export async function listSubmissionPage(problemId, { pageNum = 1, pageSize = 20 } = {}) {
+  const params = new URLSearchParams({
+    problemId: String(problemId),
+    pageNum: String(pageNum),
+    pageSize: String(pageSize),
+  })
+  const page = await request('/submissions?' + params.toString())
+  return (
+    page || {
+      records: [],
+      total: 0,
+      pageNum,
+      pageSize,
+      pages: 0,
+      hasNext: false,
+      hasPre: false,
+    }
+  )
+}
+
+/**
+ * 兼容旧调用：题目页只关心"最新一批提交"，用于结果卡片和判题轮询。
+ * 内部只取第一页，让调用方继续按数组使用。
+ */
 export async function listSubmissions(problemId) {
-  return await request('/submissions?problemId=' + problemId) || []
+  const page = await listSubmissionPage(problemId, { pageNum: 1, pageSize: 20 })
+  return page.records || []
 }
 
 export async function submitSolution(problemId, code) {

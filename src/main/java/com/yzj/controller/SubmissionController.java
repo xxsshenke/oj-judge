@@ -1,7 +1,9 @@
 package com.yzj.controller;
 
 import com.yzj.exception.BusinessException;
+import com.yzj.pojo.PageResult;
 import com.yzj.pojo.Result;
+import com.yzj.pojo.Submission;
 import com.yzj.pojo.SubmitRequest;
 import com.yzj.service.SubmissionService;
 import com.yzj.utils.RateLimiter;
@@ -34,9 +36,22 @@ public class SubmissionController {
         return Result.success(submissionService.detail(id));
     }
 
+    /**
+     * 按题目分页查询提交记录。
+     *
+     * 返回结构从"数组"改成"分页对象"，前端需要同步调整：
+     *   { records: [...], total, pageNum, pageSize, pages, hasNext, hasPre }
+     *
+     * pageNum / pageSize 都用 @RequestParam(required = false) + 默认值。
+     * 不用 defaultValue + 包装类型，是因为要能在服务层区分"没传"和"传了非法值"，
+     * 而两者最终都收敛到默认值，所以这里直接给 int 更省事。
+     */
     @GetMapping
-    public Result listByProblem(@RequestParam Integer problemId) {
-        return Result.success(submissionService.listByProblem(problemId));
+    public Result pageByProblem(@RequestParam Integer problemId,
+                                @RequestParam(required = false, defaultValue = "1") int pageNum,
+                                @RequestParam(required = false, defaultValue = "20") int pageSize) {
+        PageResult<Submission> page = submissionService.pageByProblem(problemId, pageNum, pageSize);
+        return Result.success(page);
     }
 
     /**
@@ -55,9 +70,7 @@ public class SubmissionController {
         }
 
         // 判题中互斥：同一用户同时只允许一个提交在判题。
-        // 用 userId 而不是 IP —— 校园网 NAT 下多人共用出口 IP，
-        // 按 IP 会让别人判题时你交不了。
-        // 靠 TTL 自动释放，代价是判完后最多多锁 60 秒。
+
         String judgingKey = RedisConstant.SUBMIT_LOCK_KEY + "user:" + userId;
         Boolean acquired = stringRedisTemplate.opsForValue().setIfAbsent(
                 judgingKey, "1", Duration.ofSeconds(RedisConstant.SUBMIT_LOCK_TTL_SECONDS));

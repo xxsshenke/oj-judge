@@ -8,7 +8,6 @@ class OjJudgeApplicationTests {
 
     @Test
     void contextLoads() {
-
     }
 
 }
