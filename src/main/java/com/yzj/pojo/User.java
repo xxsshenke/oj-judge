@@ -16,8 +16,21 @@ import java.time.LocalDateTime;
 public class User {
 
     private Integer id;
-    private String username;      // 登录用户名
+    private String username;      // 登录用户名（手机号注册的账号，这里就是手机号）
     private String nickname;      // 昵称
+
+    /**
+     * 手机号（注册 / 验证码登录用）。
+     *
+     * @JsonIgnore 是刻意加的：User 会被 /users/current 和 /users/{id} 直接返回，
+     * 放出去等于任何人都能查别人的手机号。用户自己也不需要在这里看到 —— 注册时刚输过。
+     *
+     * ⚠️ @JsonIgnore 只挡 JSON 序列化，不影响 MyBatis 把 phone 列映射进来，
+     *    所以 findByPhone / 查重逻辑照常可用。
+     */
+    @JsonIgnore
+    private String phone;
+
     @JsonIgnore
     private String password;      // 密码，登录功能后续实现，暂不返回给前端
     private String email;

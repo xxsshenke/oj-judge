@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yzj.mapper.SolutionMapper">
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into solution(problem_id, user_id, title, content, like_count,
+                             comment_count, status, create_time, update_time)
+        values (#{problemId}, #{userId}, #{title}, #{content}, 0,
+                0, 0, now(), now())
+    </insert>
+
+    <!--
+      只查 status = 0（未删除）。软删的题解在业务上等于不存在，
+      让所有查询都带上这个条件，比在 Service 里到处 if 判断更不容易漏。
+    -->
+    <select id="findById" resultType="com.yzj.pojo.Solution">
+        select id, problem_id, user_id, title, content, like_count,
+               comment_count, status, create_time, update_time
+        from solution
+        where id = #{id}
+          and status = 0
+    </select>
+
+    <!--
+      排序：
+        new → 按创建时间倒序
+        hot → 按点赞数倒序，点赞数相同时用时间兜底（否则顺序不稳定，
+              MySQL 在 like_count 相同的行之间返回顺序不确定，翻页会重复/漏行）
+    -->
+    <select id="findPageByProblem" resultType="com.yzj.pojo.Solution">
+        select id, problem_id, user_id, title, content, like_count,
+               comment_count, status, create_time, update_time
+        from solution
+        where problem_id = #{problemId}
+          and status = 0
+        <choose>
+            <when test="sort == 'hot'">
+                order by like_count desc, id desc
+            </when>
+            <otherwise>
+                order by id desc
+            </otherwise>
+        </choose>
+        limit #{offset}, #{limit}
+    </select>
+
+    <select id="countByProblem" resultType="long">
+        select count(*)
+        from solution
+        where problem_id = #{problemId}
+          and status = 0
+    </select>
+
+    <!--
+      一人一题一解的唯一性判断。
+      ⚠️ 这里**不带 status = 0**：软删之后仍然不允许再发，
+      否则用户删了再发就能绕过"一人一题一解"，还可能撞 uk_solution_problem_user。
+    -->
+    <select id="findByProblemAndUser" resultType="com.yzj.pojo.Solution">
+        select id, problem_id, user_id, title, content, like_count,
+               comment_count, status, create_time, update_time
+        from solution
+        where problem_id = #{problemId}
+          and user_id = #{userId}
+    </select>
+
+    <!-- update_time 由 MySQL 的 ON UPDATE CURRENT_TIMESTAMP 自动维护，这里不用手写 -->
+    <update id="updateContent">
+        update solution
+        set title   = #{title},
+            content = #{content}
+        where id = #{id}
+          and status = 0
+    </update>
+
+    <!-- 软删：不物理删除，否则 like_record 里的 target_id 会变成孤儿 -->
+    <update id="softDelete">
+        update solution
+        set status = 1
+        where id = #{id}
+          and status = 0
+    </update>
+
+    <update id="incrementLikeCount">
+        update solution set like_count = like_count + 1 where id = #{id}
+    </update>
+
+    <update id="decrementLikeCount">
+        update solution set like_count = GREATEST(like_count - 1, 0) where id = #{id}
+    </update>
+
+    <update id="incrementCommentCount">
+        update solution set comment_count = comment_count + 1 where id = #{id}
+    </update>
+
+    <update id="decrementCommentCount">
+        update solution set comment_count = GREATEST(comment_count - 1, 0) where id = #{id}
+    </update>
+
+    <update id="syncLikeCount">
+        update solution set like_count = #{likeCount} where id = #{id}
+    </update>
+
+</mapper>

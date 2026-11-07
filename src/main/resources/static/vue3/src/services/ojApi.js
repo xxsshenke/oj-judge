@@ -126,12 +126,123 @@ export async function getCurrentUser() {
   return request('/users/current')
 }
 
+/* ---------- 题解 ---------- */
+
+const EMPTY_PAGE = (pageNum, pageSize) => ({
+  records: [],
+  total: 0,
+  pageNum,
+  pageSize,
+  pages: 0,
+  hasNext: false,
+  hasPre: false,
+})
+
+/** 某题下的题解列表。sort: 'new' | 'hot' */
+export async function listSolutionPage(problemId, { pageNum = 1, pageSize = 10, sort = 'new' } = {}) {
+  const params = new URLSearchParams({
+    pageNum: String(pageNum),
+    pageSize: String(pageSize),
+    sort,
+  })
+  const page = await request('/problems/' + problemId + '/solutions?' + params.toString())
+  return page || EMPTY_PAGE(pageNum, pageSize)
+}
+
+export async function getSolution(id) {
+  return request('/solutions/' + id)
+}
+
+export async function createSolution(problemId, title, content) {
+  return request('/problems/' + problemId + '/solutions', {
+    method: 'POST',
+    body: JSON.stringify({ title, content }),
+  })
+}
+
+export async function updateSolution(id, title, content) {
+  return request('/solutions/' + id, {
+    method: 'PUT',
+    body: JSON.stringify({ title, content }),
+  })
+}
+
+export async function deleteSolution(id) {
+  return request('/solutions/' + id, { method: 'DELETE' })
+}
+
+/* ---------- 评论 ---------- */
+
+export async function listCommentPage(solutionId, { pageNum = 1, pageSize = 10 } = {}) {
+  const params = new URLSearchParams({
+    pageNum: String(pageNum),
+    pageSize: String(pageSize),
+  })
+  const page = await request('/solutions/' + solutionId + '/comments?' + params.toString())
+  return page || EMPTY_PAGE(pageNum, pageSize)
+}
+
+/** parentId 为 null 时发主评论，否则回复那条评论 */
+export async function createComment(solutionId, content, parentId = null) {
+  return request('/solutions/' + solutionId + '/comments', {
+    method: 'POST',
+    body: JSON.stringify({ content, parentId }),
+  })
+}
+
+export async function deleteComment(id) {
+  return request('/comments/' + id, { method: 'DELETE' })
+}
+
+/* ---------- 点赞 ---------- */
+
+/**
+ * 点赞 / 取消。
+ *
+ * 刻意用 POST（赞）和 DELETE（取消）两个方法，而不是一个 POST 翻转：
+ * toggle 在并发下会翻来翻去 —— 用户手抖点两次、或请求超时重试一次，
+ * 状态就反了。这两个方法各自幂等，重试安全。
+ */
+export async function likeSolution(id, liked) {
+  return request('/solutions/' + id + '/like', { method: liked ? 'POST' : 'DELETE' })
+}
+
+export async function likeComment(id, liked) {
+  return request('/comments/' + id + '/like', { method: liked ? 'POST' : 'DELETE' })
+}
+
 /* ---------- 登录 ---------- */
 
 export async function login(username, password) {
   return request('/login', {
     method: 'POST',
     body: JSON.stringify({ username, password }),
+  })
+}
+
+/**
+ * 获取验证码。
+ *
+ * 当前后端是内部实现，响应里带 smsCode 明文，由前端弹窗显示。
+ * 接真实短信通道后会把这个字段删掉，这里的返回值就只剩 expireSeconds。
+ */
+export async function sendSmsCode(phone) {
+  return request('/auth/sms/code', {
+    method: 'POST',
+    body: JSON.stringify({ phone }),
+  })
+}
+
+/**
+ * 手机号 + 验证码登录。手机号没注册时后端会自动建号。
+ *
+ * 所以前端不需要区分"注册"和"登录"两套流程 —— 一个框就够了。
+ * nickname 只在首次建号时生效，已注册用户传了也不会覆盖。
+ */
+export async function loginBySms(phone, code, nickname) {
+  return request('/login/sms', {
+    method: 'POST',
+    body: JSON.stringify({ phone, code, nickname: nickname || null }),
   })
 }
 

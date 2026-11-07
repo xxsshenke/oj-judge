@@ -8,7 +8,10 @@ import { logout as logoutApi, setUnauthorizedHandler } from '@/services/ojApi'
 
 const route = useRoute()
 const isSubmissions = computed(() => route.name === 'submissions')
-const isFullBleed = computed(() => route.name === 'problem' || route.name === 'user')
+// 解题页 / 个人页 / 题解页都是"整页铺满"布局，不显示顶部导航栏
+const isFullBleed = computed(
+  () => route.name === 'problem' || route.name === 'user' || route.name === 'solution',
+)
 
 const loginVisible = ref(false)
 

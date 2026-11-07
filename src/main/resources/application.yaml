@@ -2,7 +2,17 @@ spring:
   application:
     name: oj-judge
   datasource:
-    url: jdbc:mysql://localhost:3308/oj_judge
+    # connectionTimeZone + forceConnectionTimeZoneToSession：把数据库会话时区钉在东八区。
+    #
+    # 为什么必须加：MySQL 容器（Docker mysql84）的系统时区是 UTC，所以
+    #   ① SQL 里的 now() / CURRENT_TIMESTAMP 会写进 UTC 时间
+    #   ② 而 Java 侧 LocalDateTime.now() 写的是北京时间
+    # 两种写法混用，同一张表里的时间就差了 8 小时。
+    # 钉住会话时区后，now() 返回北京时间，与 Java 一致，
+    # 且 update_time 的 ON UPDATE CURRENT_TIMESTAMP 也跟着对。
+    #
+    # LocalDateTime 本身不带时区，读写都不做转换，所以现有数据不受影响。
+    url: jdbc:mysql://localhost:3308/oj_judge?connectionTimeZone=Asia/Shanghai&forceConnectionTimeZoneToSession=true
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: root
     password: 123456

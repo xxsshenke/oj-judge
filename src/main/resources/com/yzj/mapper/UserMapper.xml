@@ -9,6 +9,7 @@
         select id,
                username,
                nickname,
+               phone,
                email,
                avatar,
                bio,
@@ -26,9 +27,48 @@
 
     <!-- 登录专用：需要 password 做 BCrypt 校验，其他字段按需带出 -->
     <select id="findByUsername" resultType="com.yzj.pojo.User">
-        select id, username, nickname, password, role, status
+        select id, username, nickname, phone, password, role, status
         from `user`
         where username = #{username}
+    </select>
+
+    <!-- 手机号注册 / 验证码登录专用：要 phone 和 password（判断是否手机号账号） -->
+    <select id="findByPhone" resultType="com.yzj.pojo.User">
+        select id, username, nickname, phone, password, role, status
+        from `user`
+        where phone = #{phone}
+    </select>
+
+    <!--
+      新增用户。
+      ⚠️ ifnull(#{password}, '') 是兜底：password 列是 NOT NULL，
+         传 null 会报 ERROR 1048（已实测）。
+         主保险是 Service 里显式 setPassword("")，这里只是防呆。
+      role / status 也给了兜底，省得调用方漏填。
+    -->
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into `user`(username, nickname, phone, password, role, status)
+        values (#{username},
+                #{nickname},
+                #{phone},
+                ifnull(#{password}, ''),
+                ifnull(#{role}, 'USER'),
+                ifnull(#{status}, 1))
+    </insert>
+
+    <!--
+      批量查作者信息（题解列表 / 评论列表补昵称用）。
+      只取展示需要的四列：把 bio / school / rating 也带出来纯属浪费。
+      username 也要带 —— nickname 可能是空的，Service 里拿 username 兜底。
+      ⚠️ 调用方必须先判空：空集合会生成 "in ()"，那是语法错误。
+    -->
+    <select id="findByIds" resultType="com.yzj.pojo.User">
+        select id, username, nickname, avatar
+        from `user`
+        where id in
+        <foreach collection="ids" item="uid" open="(" separator="," close=")">
+            #{uid}
+        </foreach>
     </select>
 
 </mapper>

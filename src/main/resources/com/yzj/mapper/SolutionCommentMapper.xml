@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yzj.mapper.SolutionCommentMapper">
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into solution_comment(solution_id, user_id, parent_id, root_id,
+                                     reply_to_user, content, like_count, status,
+                                     create_time, update_time)
+        values (#{solutionId}, #{userId}, #{parentId}, #{rootId},
+                #{replyToUser}, #{content}, 0, 0, now(), now())
+    </insert>
+
+    <select id="findById" resultType="com.yzj.pojo.SolutionComment">
+        select id, solution_id, user_id, parent_id, root_id, reply_to_user,
+               content, like_count, status, create_time, update_time
+        from solution_comment
+        where id = #{id}
+          and status = 0
+    </select>
+
+    <!--
+      顶层主评论：root_id IS NULL。
+
+      ⚠️ 这里**不是**简单的 status = 0，而是：
+         status = 0   （自己没被删）
+         or exists 未删除的回复（自己被删了，但底下还有人回 —— 要显示占位）
+
+      为什么：主评论被删后如果直接消失，它下面那些回复就变成孤儿，
+      用户会看到一堆"回复张三"，却找不到张三说了什么。
+      论坛的通行做法是保留一条"该评论已删除"的占位，回复照常可见。
+
+      但如果是"删了且没人回"，就直接不显示 —— 否则整页都是占位符。
+      索引 idx_comment_solution(solution_id, root_id, status) 正好覆盖。
+    -->
+    <select id="findMainPage" resultType="com.yzj.pojo.SolutionComment">
+        select c.id, c.solution_id, c.user_id, c.parent_id, c.root_id, c.reply_to_user,
+               c.content, c.like_count, c.status, c.create_time, c.update_time
+        from solution_comment c
+        where c.solution_id = #{solutionId}
+          and c.root_id is null
+          and (
+                c.status = 0
+                or exists (select 1
+                           from solution_comment r
+                           where r.root_id = c.id
+                             and r.status = 0)
+              )
+        order by c.id desc
+        limit #{offset}, #{limit}
+    </select>
+
+    <!-- 与上面完全相同的过滤条件，只算总数，保证 total 和 records 口径一致 -->
+    <select id="countMain" resultType="long">
+        select count(*)
+        from solution_comment c
+        where c.solution_id = #{solutionId}
+          and c.root_id is null
+          and (
+                c.status = 0
+                or exists (select 1
+                           from solution_comment r
+                           where r.root_id = c.id
+                             and r.status = 0)
+              )
+    </select>
+
+    <!--
+      一次取回这批主评论下的全部回复（一条 SQL，无 N+1）。
+      ⚠️ 不截断、不分组 —— 截断在 Service 里按 root 做，因为 SQL 的 LIMIT
+      是全局的，做不到"每个 root 各取 N 条"。
+      ⚠️ 软删的回复也要取出来：它的父评论还引用着它，
+         前端要靠 "deleted=true" 渲染「该回复已删除」占位，
+         直接过滤掉会让回复数对不上。
+    -->
+    <select id="findRepliesByRootIds" resultType="com.yzj.pojo.SolutionComment">
+        select id, solution_id, user_id, parent_id, root_id, reply_to_user,
+               content, like_count, status, create_time, update_time
+        from solution_comment
+        where root_id in
+        <foreach collection="rootIds" item="rid" open="(" separator="," close=")">
+            #{rid}
+        </foreach>
+        order by id asc
+    </select>
+
+    <update id="softDelete">
+        update solution_comment
+        set status = 1
+        where id = #{id}
+          and status = 0
+    </update>
+
+    <update id="softDeleteBySolutionId">
+        update solution_comment
+        set status = 1
+        where solution_id = #{solutionId}
+          and status = 0
+    </update>
+
+    <update id="incrementLikeCount">
+        update solution_comment set like_count = like_count + 1 where id = #{id}
+    </update>
+
+    <!-- 同 SolutionMapper：必须防负数 -->
+    <update id="decrementLikeCount">
+        update solution_comment set like_count = GREATEST(like_count - 1, 0) where id = #{id}
+    </update>
+
+    <update id="syncLikeCount">
+        update solution_comment set like_count = #{likeCount} where id = #{id}
+    </update>
+
+</mapper>

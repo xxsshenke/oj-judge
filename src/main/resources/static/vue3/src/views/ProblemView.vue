@@ -245,6 +245,10 @@ function openSubmissions() {
   router.push({ name: 'submissions', query: { problemId: selectedProblem.value?.id } })
 }
 
+function openSolutions() {
+  router.push({ name: 'solution', query: { problemId: selectedProblem.value?.id } })
+}
+
 function openProfile() {
   router.push({ name: 'user' })
 }
@@ -330,6 +334,16 @@ onBeforeUnmount(() => {
             <circle cx="4" cy="18" r="1" fill="currentColor" />
           </svg>
           我的提交
+        </button>
+
+        <!-- 题解入口：浏览开放，写要登录（由后端权限控制，这里不藏按钮） -->
+        <button class="header-action" type="button" @click="openSolutions">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M5 4.5h11a3 3 0 0 1 3 3v12H8a3 3 0 0 1-3-3v-12Z" />
+            <path d="M8.5 9h6" />
+            <path d="M8.5 13h4" />
+          </svg>
+          题解
         </button>
 
         <!-- 未登录时显示登录按钮；登录后显示用户名 -->

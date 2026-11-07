@@ -36,10 +36,25 @@ public class WebConfig implements WebMvcConfigurer {
             PublicPath.any("/login"),
             PublicPath.any("/logout"),
 
+            // 手机号注册 / 验证码登录 —— 调用时用户还没有身份。
+            //    必须写精确路径，不能图省事写成 /login/*：
+            //    Ant 的 * 会匹配一切一级子路径，以后再加 /login/captcha、
+            //    /login/refresh 就会静默变成免登录接口。白名单最不该用通配。
+            PublicPath.any("/auth/sms/code"),
+            PublicPath.any("/login/sms"),
+
             // 题目相关：只读
             PublicPath.get("/problems"),
             PublicPath.get("/problems/*"),
             PublicPath.get("/problem-sets/**"),
+
+            // 题解：只读。
+            //   /problems/* 匹配不到 /problems/1/solutions —— Ant 的 * 不跨 /，
+            //    必须单独写这条三段规则。也不能图省事写成 /problems/**，
+            //    那会把 POST /problems/1/solutions 也放行，登录校验就废了。
+            PublicPath.get("/problems/*/solutions"),
+            PublicPath.get("/solutions/*"),
+            PublicPath.get("/solutions/*/comments"),
 
             // 提交记录：GET 是"看记录"，POST 是"交代码"（POST 没在这里，所以要登录）
             PublicPath.get("/submissions"),

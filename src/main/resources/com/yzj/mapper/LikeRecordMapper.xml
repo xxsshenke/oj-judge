@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yzj.mapper.LikeRecordMapper">
+
+    <!-- INSERT IGNORE + uk_like：数据库级的"一人一赞"，并发下也不会插进第二条 -->
+    <insert id="insertIgnore">
+        insert ignore into like_record(target_type, target_id, user_id, create_time)
+        values (#{targetType}, #{targetId}, #{userId}, now())
+    </insert>
+
+    <delete id="delete">
+        delete from like_record
+        where target_type = #{targetType}
+          and target_id = #{targetId}
+          and user_id = #{userId}
+    </delete>
+
+    <select id="countByTarget" resultType="int">
+        select count(*)
+        from like_record
+        where target_type = #{targetType}
+          and target_id = #{targetId}
+    </select>
+
+    <!-- 列表页批量判断"我赞过哪些"：一次 IN，不循环 -->
+    <select id="findLikedTargetIds" resultType="java.lang.Integer">
+        select target_id
+        from like_record
+        where target_type = #{targetType}
+          and user_id = #{userId}
+          and target_id in
+        <foreach collection="targetIds" item="tid" open="(" separator="," close=")">
+            #{tid}
+        </foreach>
+    </select>
+
+    <select id="findAllByTargetType" resultType="com.yzj.pojo.LikeRecord">
+        select id, target_type, target_id, user_id, create_time
+        from like_record
+        where target_type = #{targetType}
+    </select>
+
+    <select id="findByTarget" resultType="com.yzj.pojo.LikeRecord">
+        select id, target_type, target_id, user_id, create_time
+        from like_record
+        where target_type = #{targetType}
+          and target_id = #{targetId}
+    </select>
+
+</mapper>
