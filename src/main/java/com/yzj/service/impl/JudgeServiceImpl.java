@@ -1,7 +1,7 @@
 package com.yzj.service.impl;
 
-import com.yzj.pojo.JudgeResult;
-import com.yzj.pojo.TestCase;
+import com.yzj.pojo.vo.JudgeResult;
+import com.yzj.pojo.entity.TestCase;
 import com.yzj.service.JudgeService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

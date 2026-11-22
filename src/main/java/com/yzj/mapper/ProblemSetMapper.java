@@ -1,6 +1,6 @@
 package com.yzj.mapper;
 
-import com.yzj.pojo.ProblemSetItem;
+import com.yzj.pojo.vo.ProblemSetItem;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 

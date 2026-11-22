@@ -1,4 +1,4 @@
-package com.yzj.pojo;
+package com.yzj.pojo.dto;
 
 /**
  * 手机号 + 验证码登录 / 注册请求。

@@ -1,9 +1,9 @@
 package com.yzj.service;
 
-import com.yzj.pojo.LoginRequest;
-import com.yzj.pojo.LoginResponse;
-import com.yzj.pojo.SmsLoginRequest;
-import com.yzj.pojo.User;
+import com.yzj.pojo.dto.LoginRequest;
+import com.yzj.pojo.vo.LoginResponse;
+import com.yzj.pojo.dto.SmsLoginRequest;
+import com.yzj.pojo.entity.User;
 
 public interface UserService {
 

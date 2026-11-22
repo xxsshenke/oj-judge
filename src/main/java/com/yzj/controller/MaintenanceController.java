@@ -2,9 +2,9 @@ package com.yzj.controller;
 
 import com.yzj.exception.BusinessException;
 import com.yzj.mapper.UserMapper;
-import com.yzj.pojo.LikeRecord;
-import com.yzj.pojo.Result;
-import com.yzj.pojo.User;
+import com.yzj.pojo.entity.LikeRecord;
+import com.yzj.pojo.common.Result;
+import com.yzj.pojo.entity.User;
 import com.yzj.service.LikeService;
 import com.yzj.utils.UserHolder;
 import org.springframework.web.bind.annotation.PathVariable;

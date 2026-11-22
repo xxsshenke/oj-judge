@@ -1,6 +1,6 @@
 package com.yzj.service;
 
-import com.yzj.pojo.Problem;
+import com.yzj.pojo.entity.Problem;
 
 import java.util.List;
 

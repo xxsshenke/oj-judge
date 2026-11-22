@@ -1,9 +1,9 @@
 package com.yzj.service;
 
-import com.yzj.pojo.PageResult;
-import com.yzj.pojo.SolutionDetailVO;
-import com.yzj.pojo.SolutionSaveRequest;
-import com.yzj.pojo.SolutionVO;
+import com.yzj.pojo.common.PageResult;
+import com.yzj.pojo.vo.SolutionDetailVO;
+import com.yzj.pojo.dto.SolutionSaveRequest;
+import com.yzj.pojo.vo.SolutionVO;
 
 /**
  * 题解业务。

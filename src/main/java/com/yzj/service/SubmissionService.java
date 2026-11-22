@@ -1,8 +1,8 @@
 package com.yzj.service;
 
-import com.yzj.pojo.PageResult;
-import com.yzj.pojo.Submission;
-import com.yzj.pojo.SubmitRequest;
+import com.yzj.pojo.common.PageResult;
+import com.yzj.pojo.entity.Submission;
+import com.yzj.pojo.dto.SubmitRequest;
 
 public interface SubmissionService {
     Submission submit(SubmitRequest req);

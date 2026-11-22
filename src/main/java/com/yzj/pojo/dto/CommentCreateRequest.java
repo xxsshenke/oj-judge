@@ -1,4 +1,4 @@
-package com.yzj.pojo;
+package com.yzj.pojo.dto;
 
 /**
  * 发表评论的请求体。

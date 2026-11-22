@@ -3,7 +3,7 @@ package com.yzj.service.impl;
 import cn.hutool.json.JSONUtil;
 import com.yzj.exception.BusinessException;
 import com.yzj.mapper.ProblemMapper;
-import com.yzj.pojo.Problem;
+import com.yzj.pojo.entity.Problem;
 import com.yzj.service.ProblemService;
 import com.yzj.utils.RedisConstant;
 import java.util.concurrent.ThreadLocalRandom;

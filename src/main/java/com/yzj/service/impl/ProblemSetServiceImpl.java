@@ -1,9 +1,9 @@
 package com.yzj.service.impl;
 
 import com.yzj.mapper.ProblemSetMapper;
-import com.yzj.pojo.ProblemSetItem;
-import com.yzj.pojo.ProblemSetOverview;
-import com.yzj.pojo.TagCount;
+import com.yzj.pojo.vo.ProblemSetItem;
+import com.yzj.pojo.vo.ProblemSetOverview;
+import com.yzj.pojo.vo.TagCount;
 import com.yzj.service.ProblemSetService;
 import org.springframework.stereotype.Service;
 

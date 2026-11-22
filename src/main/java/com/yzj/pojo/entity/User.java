@@ -1,4 +1,4 @@
-package com.yzj.pojo;
+package com.yzj.pojo.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
@@ -25,7 +25,7 @@ public class User {
      * @JsonIgnore 是刻意加的：User 会被 /users/current 和 /users/{id} 直接返回，
      * 放出去等于任何人都能查别人的手机号。用户自己也不需要在这里看到 —— 注册时刚输过。
      *
-     * ⚠️ @JsonIgnore 只挡 JSON 序列化，不影响 MyBatis 把 phone 列映射进来，
+     *   @JsonIgnore 只挡 JSON 序列化，不影响 MyBatis 把 phone 列映射进来，
      *    所以 findByPhone / 查重逻辑照常可用。
      */
     @JsonIgnore

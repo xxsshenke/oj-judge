@@ -24,7 +24,7 @@
          例如 tag=数组 不会命中 "二维数组"，标签里也不能有空格（写入时已约定）。
       8. group by 列出所有非聚合列，兼容 MySQL 的 ONLY_FULL_GROUP_BY 模式。
     -->
-    <select id="findProblems" resultType="com.yzj.pojo.ProblemSetItem">
+    <select id="findProblems" resultType="com.yzj.pojo.vo.ProblemSetItem">
         select p.id,
                p.title,
                p.difficulty,

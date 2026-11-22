@@ -1,9 +1,9 @@
 package com.yzj.controller;
 
 import com.yzj.exception.BusinessException;
-import com.yzj.pojo.LikeRecord;
-import com.yzj.pojo.LikeResult;
-import com.yzj.pojo.Result;
+import com.yzj.pojo.entity.LikeRecord;
+import com.yzj.pojo.vo.LikeResult;
+import com.yzj.pojo.common.Result;
 import com.yzj.service.LikeService;
 import com.yzj.utils.RateLimiter;
 import com.yzj.utils.RedisConstant;

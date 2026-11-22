@@ -1,4 +1,4 @@
-package com.yzj.pojo;
+package com.yzj.pojo.vo;
 
 /**
  * 验证码响应。

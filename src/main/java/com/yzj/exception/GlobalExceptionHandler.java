@@ -1,6 +1,6 @@
 package com.yzj.exception;
 
-import com.yzj.pojo.Result;
+import com.yzj.pojo.common.Result;
 
 import lombok.extern.slf4j.Slf4j;
 

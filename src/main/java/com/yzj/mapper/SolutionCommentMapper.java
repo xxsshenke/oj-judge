@@ -1,6 +1,6 @@
 package com.yzj.mapper;
 
-import com.yzj.pojo.SolutionComment;
+import com.yzj.pojo.entity.SolutionComment;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 

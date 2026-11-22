@@ -5,7 +5,7 @@
 
 <mapper namespace="com.yzj.mapper.UserMapper">
 
-    <select id="findById" resultType="com.yzj.pojo.User">
+    <select id="findById" resultType="com.yzj.pojo.entity.User">
         select id,
                username,
                nickname,
@@ -26,14 +26,14 @@
     </select>
 
     <!-- 登录专用：需要 password 做 BCrypt 校验，其他字段按需带出 -->
-    <select id="findByUsername" resultType="com.yzj.pojo.User">
+    <select id="findByUsername" resultType="com.yzj.pojo.entity.User">
         select id, username, nickname, phone, password, role, status
         from `user`
         where username = #{username}
     </select>
 
     <!-- 手机号注册 / 验证码登录专用：要 phone 和 password（判断是否手机号账号） -->
-    <select id="findByPhone" resultType="com.yzj.pojo.User">
+    <select id="findByPhone" resultType="com.yzj.pojo.entity.User">
         select id, username, nickname, phone, password, role, status
         from `user`
         where phone = #{phone}
@@ -62,7 +62,7 @@
       username 也要带 —— nickname 可能是空的，Service 里拿 username 兜底。
       ⚠️ 调用方必须先判空：空集合会生成 "in ()"，那是语法错误。
     -->
-    <select id="findByIds" resultType="com.yzj.pojo.User">
+    <select id="findByIds" resultType="com.yzj.pojo.entity.User">
         select id, username, nickname, avatar
         from `user`
         where id in

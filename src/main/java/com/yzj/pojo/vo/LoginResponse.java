@@ -1,4 +1,4 @@
-package com.yzj.pojo;
+package com.yzj.pojo.vo;
 
 /**
  * 登录成功后返回给前端的凭据。

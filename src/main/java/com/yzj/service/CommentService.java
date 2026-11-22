@@ -1,8 +1,8 @@
 package com.yzj.service;
 
-import com.yzj.pojo.CommentCreateRequest;
-import com.yzj.pojo.CommentVO;
-import com.yzj.pojo.PageResult;
+import com.yzj.pojo.dto.CommentCreateRequest;
+import com.yzj.pojo.vo.CommentVO;
+import com.yzj.pojo.common.PageResult;
 
 /**
  * 题解评论（主评论 + 回复）。

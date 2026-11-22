@@ -1,7 +1,7 @@
 package com.yzj.service;
 
-import com.yzj.pojo.JudgeResult;
-import com.yzj.pojo.TestCase;
+import com.yzj.pojo.vo.JudgeResult;
+import com.yzj.pojo.entity.TestCase;
 
 import java.util.List;
 

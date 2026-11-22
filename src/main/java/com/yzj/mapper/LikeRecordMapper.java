@@ -1,6 +1,6 @@
 package com.yzj.mapper;
 
-import com.yzj.pojo.LikeRecord;
+import com.yzj.pojo.entity.LikeRecord;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -23,7 +23,7 @@ public interface LikeRecordMapper {
      * 虽然 uk_like 会挡住第二个，但会抛 DuplicateKeyException 需要捕获；
      * INSERT IGNORE 直接把这件事交给数据库，一条语句、无异常。
      *
-     * ⚠️ 返回受影响行数：1 表示真的插入了，0 表示已存在。
+     *  返回受影响行数：1 表示真的插入了，0 表示已存在。
      * 这是"MySQL 侧"的幂等信号，与 Redis SADD 的返回值互为双保险。
      */
     int insertIgnore(@Param("targetType") Integer targetType,

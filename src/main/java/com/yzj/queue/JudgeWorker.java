@@ -4,10 +4,10 @@ import com.yzj.exception.BusinessException;
 import com.yzj.mapper.ProblemMapper;
 import com.yzj.mapper.SubmissionMapper;
 import com.yzj.mapper.TestCaseMapper;
-import com.yzj.pojo.JudgeResult;
-import com.yzj.pojo.Problem;
-import com.yzj.pojo.Submission;
-import com.yzj.pojo.TestCase;
+import com.yzj.pojo.vo.JudgeResult;
+import com.yzj.pojo.entity.Problem;
+import com.yzj.pojo.entity.Submission;
+import com.yzj.pojo.entity.TestCase;
 import com.yzj.service.JudgeService;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
@@ -118,7 +118,7 @@ public class JudgeWorker {
             return;
         }
 
-        int rows = submissionMapper.updateStatus(submissionId, "JUDGING");
+        int rows = submissionMapper.updateStatusJG(submissionId, "JUDGING");
 
         if (rows == 0) {
             log.warn("任务已被其他节点抢占或状态已变更: {}", submissionId);

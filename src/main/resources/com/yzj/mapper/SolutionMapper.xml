@@ -16,7 +16,7 @@
       只查 status = 0（未删除）。软删的题解在业务上等于不存在，
       让所有查询都带上这个条件，比在 Service 里到处 if 判断更不容易漏。
     -->
-    <select id="findById" resultType="com.yzj.pojo.Solution">
+    <select id="findById" resultType="com.yzj.pojo.entity.Solution">
         select id, problem_id, user_id, title, content, like_count,
                comment_count, status, create_time, update_time
         from solution
@@ -30,7 +30,7 @@
         hot → 按点赞数倒序，点赞数相同时用时间兜底（否则顺序不稳定，
               MySQL 在 like_count 相同的行之间返回顺序不确定，翻页会重复/漏行）
     -->
-    <select id="findPageByProblem" resultType="com.yzj.pojo.Solution">
+    <select id="findPageByProblem" resultType="com.yzj.pojo.entity.Solution">
         select id, problem_id, user_id, title, content, like_count,
                comment_count, status, create_time, update_time
         from solution
@@ -59,7 +59,7 @@
       ⚠️ 这里**不带 status = 0**：软删之后仍然不允许再发，
       否则用户删了再发就能绕过"一人一题一解"，还可能撞 uk_solution_problem_user。
     -->
-    <select id="findByProblemAndUser" resultType="com.yzj.pojo.Solution">
+    <select id="findByProblemAndUser" resultType="com.yzj.pojo.entity.Solution">
         select id, problem_id, user_id, title, content, like_count,
                comment_count, status, create_time, update_time
         from solution

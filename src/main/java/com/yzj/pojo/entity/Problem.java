@@ -1,4 +1,4 @@
-package com.yzj.pojo;
+package com.yzj.pojo.entity;
 
 
 import lombok.AllArgsConstructor;

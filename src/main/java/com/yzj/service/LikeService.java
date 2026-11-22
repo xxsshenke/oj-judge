@@ -1,6 +1,6 @@
 package com.yzj.service;
 
-import com.yzj.pojo.LikeResult;
+import com.yzj.pojo.vo.LikeResult;
 
 import java.util.Collection;
 import java.util.Set;
@@ -18,7 +18,7 @@ public interface LikeService {
      *
      * 重复点赞不报错、不重复计数，直接返回当前状态。
      *
-     * @param targetType {@link com.yzj.pojo.LikeRecord#TYPE_SOLUTION} 或 TYPE_COMMENT
+     * @param targetType {@link com.yzj.pojo.entity.LikeRecord#TYPE_SOLUTION} 或 TYPE_COMMENT
      * @param targetId   目标 id
      * @param userId     操作人，由 UserHolder 提供
      */

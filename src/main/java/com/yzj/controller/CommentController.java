@@ -1,10 +1,10 @@
 package com.yzj.controller;
 
 import com.yzj.exception.BusinessException;
-import com.yzj.pojo.CommentCreateRequest;
-import com.yzj.pojo.CommentVO;
-import com.yzj.pojo.PageResult;
-import com.yzj.pojo.Result;
+import com.yzj.pojo.dto.CommentCreateRequest;
+import com.yzj.pojo.vo.CommentVO;
+import com.yzj.pojo.common.PageResult;
+import com.yzj.pojo.common.Result;
 import com.yzj.service.CommentService;
 import com.yzj.utils.RateLimiter;
 import com.yzj.utils.RedisConstant;

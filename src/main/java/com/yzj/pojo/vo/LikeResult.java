@@ -1,4 +1,4 @@
-package com.yzj.pojo;
+package com.yzj.pojo.vo;
 
 /**
  * 点赞 / 取消点赞的返回。

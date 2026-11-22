@@ -1,6 +1,6 @@
 package com.yzj.mapper;
 
-import com.yzj.pojo.Submission;
+import com.yzj.pojo.entity.Submission;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -34,6 +34,8 @@ public interface SubmissionMapper {
     void updateResult(Submission submission);
 
     int updateStatus(@Param("id") Integer id, @Param("status") String status);
+
+    int updateStatusJG(@Param("id") Integer id, @Param("status") String status);
 
     // ⭐ 新增：服务启动时恢复未完成的提交
     List<Submission> findByStatus(@Param("status") String status);

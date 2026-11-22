@@ -38,7 +38,7 @@ public class RedisConstant {
     /**
      * 题解点赞关系：oj:like:solution:{solutionId} -> Set&lt;userId&gt;
      *
-     * ⚠️ 刻意不设 TTL。点赞关系是业务数据，不是缓存 ——
+     * 刻意不设 TTL。点赞关系是业务数据，不是缓存 ——
      * 设了 TTL 就变成"关系会过期"，那是 bug。
      *
      * 它只是"快闸"（SADD 天然幂等，挡住重复点赞），
@@ -60,7 +60,7 @@ public class RedisConstant {
 
     /** 按 targetType 取对应的点赞 key 前缀 */
     public static String likeKey(int targetType, Integer targetId) {
-        return targetType == com.yzj.pojo.LikeRecord.TYPE_SOLUTION
+        return targetType == com.yzj.pojo.entity.LikeRecord.TYPE_SOLUTION
                 ? LIKE_SOLUTION_KEY + targetId
                 : LIKE_COMMENT_KEY + targetId;
     }

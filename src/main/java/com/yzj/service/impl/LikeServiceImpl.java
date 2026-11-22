@@ -4,10 +4,10 @@ import com.yzj.exception.BusinessException;
 import com.yzj.mapper.LikeRecordMapper;
 import com.yzj.mapper.SolutionCommentMapper;
 import com.yzj.mapper.SolutionMapper;
-import com.yzj.pojo.LikeRecord;
-import com.yzj.pojo.LikeResult;
-import com.yzj.pojo.Solution;
-import com.yzj.pojo.SolutionComment;
+import com.yzj.pojo.entity.LikeRecord;
+import com.yzj.pojo.vo.LikeResult;
+import com.yzj.pojo.entity.Solution;
+import com.yzj.pojo.entity.SolutionComment;
 import com.yzj.service.LikeService;
 import com.yzj.utils.RedisConstant;
 import lombok.extern.slf4j.Slf4j;
@@ -89,7 +89,7 @@ public class LikeServiceImpl implements LikeService {
 
         if (removed == null || removed == 0) {
             // 本来就没赞过：幂等返回。
-            // ⚠️ 这里**不能**减计数 —— 否则用户连点两次"取消"就会把别人的赞减掉
+            //  这里**不能**减计数 —— 否则用户连点两次"取消"就会把别人的赞减掉
             return new LikeResult(false, currentLikeCount(targetType, targetId));
         }
 
@@ -101,7 +101,7 @@ public class LikeServiceImpl implements LikeService {
 
     @Override
     public Set<Integer> likedTargetIds(int targetType, Collection<Integer> targetIds, Integer userId) {
-        // ⭐ 重要短路：未登录浏览是最常见场景，不必查 Redis
+        //  重要短路：未登录浏览是最常见场景，不必查 Redis
         if (userId == null || targetIds == null || targetIds.isEmpty()) {
             return Collections.emptySet();
         }
@@ -197,7 +197,7 @@ public class LikeServiceImpl implements LikeService {
     /**
      * 递减计数。
      *
-     * ⚠️ SQL 里用 GREATEST(x - 1, 0)：like_count 是 int NOT NULL，
+     * SQL 里用 GREATEST(x - 1, 0)：like_count 是 int NOT NULL，
      * 减到 -1 会静默存进去（非严格模式）或直接报错（严格模式），两种都是 bug。
      */
     private void decrementCount(int targetType, Integer targetId) {

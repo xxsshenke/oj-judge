@@ -1,9 +1,9 @@
 package com.yzj;
 
 import cn.hutool.json.JSONUtil;
-import com.yzj.pojo.JudgeResult;
-import com.yzj.pojo.Problem;
-import com.yzj.pojo.TestCase;
+import com.yzj.pojo.vo.JudgeResult;
+import com.yzj.pojo.entity.Problem;
+import com.yzj.pojo.entity.TestCase;
 import com.yzj.service.impl.JudgeServiceImpl;
 import com.yzj.service.JudgeService;
 import org.junit.jupiter.api.Test;

@@ -12,19 +12,19 @@
       是因为解题页需要渲染“示例输入/输出”区块；findById 是判题链路在用，不需要 description。
     -->
 
-    <select id="findAll" resultType="com.yzj.pojo.Problem">
+    <select id="findAll" resultType="com.yzj.pojo.entity.Problem">
         select id, title, description, input, expected, difficulty, create_time, update_time, judge_mode
         from problem
         order by id
     </select>
 
-    <select id="findById" resultType="com.yzj.pojo.Problem">
+    <select id="findById" resultType="com.yzj.pojo.entity.Problem">
         select id, title, description, judge_mode, expected, input, difficulty, create_time, update_time
         from problem
         where id = #{id}
     </select>
 
-    <select id="findDetailById" resultType="com.yzj.pojo.Problem">
+    <select id="findDetailById" resultType="com.yzj.pojo.entity.Problem">
         select id, title, description, input, expected, difficulty, create_time, update_time, judge_mode
         from problem
         where id = #{id}

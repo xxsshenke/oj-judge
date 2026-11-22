@@ -2,7 +2,7 @@ package com.yzj.service.impl;
 
 import cn.hutool.core.util.StrUtil;
 import com.yzj.exception.BusinessException;
-import com.yzj.pojo.SmsCodeResponse;
+import com.yzj.pojo.vo.SmsCodeResponse;
 import com.yzj.service.SmsCodeService;
 import com.yzj.utils.RedisConstant;
 import lombok.extern.slf4j.Slf4j;

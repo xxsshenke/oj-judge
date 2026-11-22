@@ -1,9 +1,9 @@
 package com.yzj.controller;
 
-import com.yzj.pojo.Result;
-import com.yzj.pojo.SmsCodeRequest;
-import com.yzj.pojo.SmsCodeResponse;
-import com.yzj.pojo.SmsLoginRequest;
+import com.yzj.pojo.common.Result;
+import com.yzj.pojo.dto.SmsCodeRequest;
+import com.yzj.pojo.vo.SmsCodeResponse;
+import com.yzj.pojo.dto.SmsLoginRequest;
 import com.yzj.service.SmsCodeService;
 import com.yzj.service.UserService;
 import org.springframework.web.bind.annotation.PostMapping;

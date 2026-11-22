@@ -1,10 +1,11 @@
 package com.yzj.controller;
 
+import cn.hutool.core.util.StrUtil;
 import com.yzj.exception.BusinessException;
-import com.yzj.pojo.PageResult;
-import com.yzj.pojo.Result;
-import com.yzj.pojo.Submission;
-import com.yzj.pojo.SubmitRequest;
+import com.yzj.pojo.common.PageResult;
+import com.yzj.pojo.common.Result;
+import com.yzj.pojo.entity.Submission;
+import com.yzj.pojo.dto.SubmitRequest;
 import com.yzj.service.SubmissionService;
 import com.yzj.utils.RateLimiter;
 import com.yzj.utils.RedisConstant;
@@ -64,9 +65,14 @@ public class SubmissionController {
     public Result submit(@RequestBody SubmitRequest req, HttpServletRequest request) {
         Integer userId = UserHolder.get();
 
+
         // 按用户限流：同一账号每分钟最多 10 次
         if (!rateLimiter.tryAcquire("oj:rate:submit:user:" + userId, 60, 10)) {
             throw new BusinessException("提交太频繁，请 1 分钟后再试");
+        }
+
+        if(StrUtil.isBlank(req.code())){
+            throw new BusinessException("代码不能为空");
         }
 
         // 判题中互斥：同一用户同时只允许一个提交在判题。

@@ -1,9 +1,9 @@
 package com.yzj.controller;
 
 import com.yzj.interceptor.RefreshTokenInterceptor;
-import com.yzj.pojo.LoginRequest;
-import com.yzj.pojo.LoginResponse;
-import com.yzj.pojo.Result;
+import com.yzj.pojo.dto.LoginRequest;
+import com.yzj.pojo.vo.LoginResponse;
+import com.yzj.pojo.common.Result;
 import com.yzj.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.bind.annotation.PostMapping;

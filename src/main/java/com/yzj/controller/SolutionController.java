@@ -1,11 +1,11 @@
 package com.yzj.controller;
 
 import com.yzj.exception.BusinessException;
-import com.yzj.pojo.PageResult;
-import com.yzj.pojo.Result;
-import com.yzj.pojo.SolutionDetailVO;
-import com.yzj.pojo.SolutionSaveRequest;
-import com.yzj.pojo.SolutionVO;
+import com.yzj.pojo.common.PageResult;
+import com.yzj.pojo.common.Result;
+import com.yzj.pojo.vo.SolutionDetailVO;
+import com.yzj.pojo.dto.SolutionSaveRequest;
+import com.yzj.pojo.vo.SolutionVO;
 import com.yzj.service.SolutionService;
 import com.yzj.utils.RateLimiter;
 import com.yzj.utils.RedisConstant;

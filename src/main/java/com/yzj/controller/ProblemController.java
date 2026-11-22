@@ -1,6 +1,6 @@
 package com.yzj.controller;
 
-import com.yzj.pojo.Result;
+import com.yzj.pojo.common.Result;
 import com.yzj.service.ProblemService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -25,5 +25,6 @@ public class ProblemController {
     @GetMapping("/{id}")
     public Result detail(@PathVariable Integer id) {
         return Result.success(problemService.detail(id));
+
     }
 }

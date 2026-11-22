@@ -1,4 +1,4 @@
-package com.yzj.pojo;
+package com.yzj.pojo.dto;
 
 /**
  * 发表 / 修改题解的请求体。

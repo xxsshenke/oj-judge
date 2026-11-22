@@ -1,6 +1,6 @@
 package com.yzj.service;
 
-import com.yzj.pojo.SmsCodeResponse;
+import com.yzj.pojo.vo.SmsCodeResponse;
 
 /**
  * 验证码的生成与校验。

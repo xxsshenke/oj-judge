@@ -1,7 +1,7 @@
 package com.yzj.service;
 
-import com.yzj.pojo.ProblemSetItem;
-import com.yzj.pojo.ProblemSetOverview;
+import com.yzj.pojo.vo.ProblemSetItem;
+import com.yzj.pojo.vo.ProblemSetOverview;
 
 import java.util.List;
 

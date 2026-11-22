@@ -1,6 +1,6 @@
 package com.yzj.controller;
 
-import com.yzj.pojo.Result;
+import com.yzj.pojo.common.Result;
 import com.yzj.service.ProblemSetService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
