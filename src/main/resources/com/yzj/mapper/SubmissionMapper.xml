@@ -33,8 +33,11 @@
     <update id="updateStatus">
         update submission set status = #{status} where id = #{id}
     </update>
+    <update id="updateStatusJG">
+        update submission set status = #{status} where id = #{id} AND status = 'PENDING'
+    </update>
 
-    <select id="findById" resultType="com.yzj.pojo.Submission">
+    <select id="findById" resultType="com.yzj.pojo.entity.Submission">
         select * from submission where id = #{id}
     </select>
 
@@ -46,7 +49,7 @@
       "第 1 页和第 2 页重复同一条 / 漏掉某一条"。
       加上 id 后排序是全序的，分页结果才稳定。
     -->
-    <select id="findPageByProblemId" resultType="com.yzj.pojo.Submission">
+    <select id="findPageByProblemId" resultType="com.yzj.pojo.entity.Submission">
         select <include refid="listColumns"/>
         from submission
         where problem_id = #{problemId}
@@ -58,7 +61,7 @@
         select count(*) from submission where problem_id = #{problemId}
     </select>
 
-    <select id="findByStatus" resultType="com.yzj.pojo.Submission">
+    <select id="findByStatus" resultType="com.yzj.pojo.entity.Submission">
         select * from submission where status = #{status} order by id
     </select>
 
