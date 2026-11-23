@@ -70,26 +70,6 @@ com.yzj
 
 判定顺序：**超时 → 退出码(137/MLE) → 输出超限(OLE) → 退出码非 0(RE) → 输出比对**。
 
-## 踩过的坑
-
-1. **`wsl.exe` 往 stderr 打 UTF-16 警告，混进 out.txt 后
-   `Files.readString` 抛 `MalformedInputException` → 所有提交变 SE。**
-   修复：分离 stdout/stderr + 容错解码。
-
-2. **`destroyForcibly()` 只杀 docker 客户端，容器仍在跑。**
-   修复：`--name` + 超时后 `docker kill`。
-
-3. **`--memory-swap` 不配 `--memory` → docker 直接拒绝启动（exit 125），
-   被当成编译失败。**
-   修复：两个参数成对出现；退出码 125 判 SE（系统错误）而不是 CE（用户错误）。
-
-4. **并发提交共用一个工作目录 → 结果串号。**
-   修复：每次提交 UUID 独立目录。
-
-5. **`redirectOutput` 每次都会创建文件，导致"文件是否存在"无法区分
-   "程序有没有输出"，RE 被误判成 WA。**
-   修复：先判退出码，再读输出。
-
 ## 如何运行
 
 ```bash
